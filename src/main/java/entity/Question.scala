@@ -9,27 +9,33 @@ import java.lang.Boolean
   */
 @Entity
 class Question {
-
   @Id(auto = true)
   var id: Long = _
-
-  def getId: Long = id
-
   var chapter: Integer = _
-
   var index: Integer = _
-
   var title: String = _
-
   var a: String = _
-
   var b: String = _
-
   var c: String = _
-
   var d: String = _
-
   var answer: String = _
-
   var multi: Boolean = _
+}
+
+@Entity
+class QuizQuestion {
+  @Id(auto = true)
+  val id: Long = _
+  val question: Question = _
+  val quiz: Quiz = _
+  val answer: String = _
+  val userAnswer: String = _
+  val correct: Boolean = _
+}
+
+@Entity
+class Quiz {
+  @Id(auto = true)
+  val id: Long = _
+  val qts: Array[QuizQuestion] = _
 }
