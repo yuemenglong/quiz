@@ -19,9 +19,13 @@ object Parser {
   val answerPattern: Regex = """答案： ([abcd]+)""".r
 
   def main(args: Array[String]): Unit = {
-    Orm.init("yy/rdpac/entity")
+    Orm.init("yy.rdpac.entity")
+    val db = Orm.openDb("localhost", 3306, "root", "root", "rdpac")
+    db.rebuild()
     val res = Orm.converts(parse())
     println(res.length)
+    val ex = Orm.insert(classOf[Question]).values(res)
+    db.openSession().execute(ex)
   }
 
   def parse(): Array[Question] = {
@@ -52,10 +56,10 @@ object Parser {
     var idx = 1
     var chapter = 1
     ret.foreach(q => {
-      println(q.index, q.title)
-      if (q.index == idx) {
+      println(q.idx, q.title)
+      if (q.idx == idx) {
         idx += 1
-      } else if (q.index == 1) {
+      } else if (q.idx == 1) {
         idx = 2
         chapter += 1
       } else {
@@ -71,7 +75,7 @@ object Parser {
     val re = """(\d+)-(.+)""".r
     map("title") match {
       case re(index, title) =>
-        ret.index = index.toInt
+        ret.idx = index.toInt
         ret.title = title
     }
     ret.a = map("a")
