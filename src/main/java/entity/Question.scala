@@ -1,13 +1,23 @@
 package entity
 
+import yy.orm.lang.anno.{Entity, Id}
+import java.lang.Long
+import java.lang.Boolean
+
 /**
   * Created by <yuemenglong@126.com> on 2017/7/17.
   */
+@Entity
 class Question {
 
-  var chapter: Int = _
+  @Id(auto = true)
+  var id: Long = _
 
-  var index: Int = _
+  def getId: Long = id
+
+  var chapter: Integer = _
+
+  var index: Integer = _
 
   var title: String = _
 

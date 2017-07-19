@@ -1,5 +1,6 @@
 import entity.Question
 import yy.json.JSON
+import yy.orm.Orm
 
 import scala.collection.mutable.ArrayBuffer
 import scala.io.Source
@@ -17,7 +18,9 @@ object Parser {
   val answerPattern: Regex = """答案： ([abcd]+)""".r
 
   def main(args: Array[String]): Unit = {
-    parse().map(JSON.stringify).foreach(println)
+    Orm.init("entity")
+    val res = Orm.converts(parse())
+    println(res.length)
   }
 
   def parse(): Array[Question] = {
@@ -45,6 +48,20 @@ object Parser {
           throw e
       }
     }
+    var idx = 1
+    var chapter = 1
+    ret.foreach(q => {
+      println(q.index, q.title)
+      if (q.index == idx) {
+        idx += 1
+      } else if (q.index == 1) {
+        idx = 2
+        chapter += 1
+      } else {
+        throw new RuntimeException("Not Continued")
+      }
+      q.chapter = chapter
+    })
     ret.toArray
   }
 
@@ -68,7 +85,7 @@ object Parser {
   def getFullTitle(lines: Array[String], pos: Int, r: String): (String, String, String) = {
     var title = r
     var p = pos + 1
-    while (title.last != '：') {
+    while (title.last != '：' && !lines(p).startsWith("A．")) {
       if (!lines(p).trim.isEmpty) {
         title += lines(p).trim
       }
