@@ -1,8 +1,9 @@
-package entity
+package yy.rdpac.entity
 
-import yy.orm.lang.anno.{Entity, Id}
+import yy.orm.lang.anno._
 import java.lang.Long
 import java.lang.Boolean
+import java.util.Date
 
 /**
   * Created by <yuemenglong@126.com> on 2017/7/17.
@@ -25,17 +26,22 @@ class Question {
 @Entity
 class QuizQuestion {
   @Id(auto = true)
-  val id: Long = _
-  val question: Question = _
-  val quiz: Quiz = _
-  val answer: String = _
-  val userAnswer: String = _
-  val correct: Boolean = _
+  var id: Long = _
+  @Pointer
+  var question: Question = _
+  @Pointer
+  var quiz: Quiz = _
+  var answer: String = _
+  var userAnswer: String = _
+  var correct: Boolean = _
 }
 
 @Entity
 class Quiz {
   @Id(auto = true)
-  val id: Long = _
-  val qts: Array[QuizQuestion] = _
+  var id: Long = _
+  @DateTime
+  var createTime: Date = _
+  @OneToMany
+  var qts: Array[QuizQuestion] = Array()
 }

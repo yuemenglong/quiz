@@ -1,5 +1,6 @@
-import entity.Question
-import yy.json.JSON
+package yy.rdpac.parser
+
+import yy.rdpac.entity.Question
 import yy.orm.Orm
 
 import scala.collection.mutable.ArrayBuffer
@@ -18,7 +19,7 @@ object Parser {
   val answerPattern: Regex = """答案： ([abcd]+)""".r
 
   def main(args: Array[String]): Unit = {
-    Orm.init("entity")
+    Orm.init("yy/rdpac/entity")
     val res = Orm.converts(parse())
     println(res.length)
   }

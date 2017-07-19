@@ -1,4 +1,4 @@
-package bean
+package yy.rdpac.bean
 
 import yy.orm.Orm
 
@@ -11,7 +11,7 @@ class Dao {
 
 object dao {
   def main(args: Array[String]): Unit = {
-    Orm.init("entity")
+    Orm.init("yy/rdpac/entity")
     val db = Orm.openDb("localhost", 3306, "root", "root", "rdpac")
     db.rebuild()
   }
