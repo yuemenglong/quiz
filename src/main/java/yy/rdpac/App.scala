@@ -12,6 +12,7 @@ import java.lang.Boolean
 import java.lang.Long
 
 import yy.json.JSON
+import yy.json.parse.JsonArr
 
 /**
   * Created by <yuemenglong@126.com> on 2017/7/19.
@@ -40,10 +41,9 @@ class App {
     // 判断有没有未完成的quiz
     val quizRoot = Orm.root(classOf[Quiz]).asSelect()
     val qtJoin = quizRoot.select("questions")
-    qtJoin.on(quizRoot.get("finished").eql(new Boolean(false))
-      .and(qtJoin.get("answer").notNull()))
+    qtJoin.on(qtJoin.get("answer").notNull())
     val query = Orm.select(quizRoot).from(quizRoot)
-    //      .where(quizRoot.get("finished").eql(new Boolean(false)))
+      .where(quizRoot.get("finished").eql(new Boolean(false)))
     var quiz = session.first(query)
     if (quiz == null) {
       // 产生新的quiz并返回, 随机120单选30多选
@@ -65,6 +65,7 @@ class App {
       session.execute(ex)
       val jo = JSON.convert(quiz).asObj()
       jo.remove("questions")
+      jo.set("questions", JsonArr(Array()))
       jo.toString()
     } else {
       JSON.stringify(quiz)
@@ -80,7 +81,11 @@ class App {
       .where(root.get("quizId").eql(quizId).and(root.get("answer").isNull))
       .limit(1)
     val question = session.first(query)
-    JSON.stringify(question)
+    if (question == null) {
+      "null"
+    } else {
+      JSON.stringify(question)
+    }
   })
 
   @ResponseBody
@@ -111,7 +116,7 @@ class App {
       quiz.id = quizId
       quiz.finished = true
       session.execute(Orm.update(quiz))
-      "{}"
+      "null"
     }
   })
 }
