@@ -33,14 +33,14 @@ class QuizQuestion {
   @Id(auto = true)
   var id: Long = _
   @Pointer
-  var question: Question = _
+  var info: Question = _
   @Pointer
   var quiz: Quiz = _
-  var userAnswer: String = _
+  var answer: String = _
   var correct: Boolean = _
 
   var quizId: Long = _
-  var questionId: Long = _
+  var infoId: Long = _
 }
 
 @Entity
