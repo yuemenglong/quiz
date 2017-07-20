@@ -49,7 +49,8 @@ class Quiz {
   var id: Long = _
   @DateTime
   var createTime: Date = new Date()
-  @OneToMany
+  @OneToMany(right = "quizId")
   var questions: Array[QuizQuestion] = Array()
+  var count: Integer = _
   var finished: Boolean = false
 }
