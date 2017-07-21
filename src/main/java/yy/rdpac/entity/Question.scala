@@ -36,8 +36,10 @@ class QuizQuestion {
   var info: Question = _
   @Pointer
   var quiz: Quiz = _
+
   var answer: String = _
-  var correct: Boolean = _
+  var fails: Integer = 0
+  var correct: Boolean = false
 
   var quizId: Long = _
   var infoId: Long = _
