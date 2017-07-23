@@ -39,7 +39,8 @@ class App {
   @RequestMapping(value = Array("/quiz"), method = Array(RequestMethod.GET), produces = Array("application/json"))
   def getCurrentQuiz: String = dao.beginTransaction(session => {
     val root = Orm.root(classOf[Quiz]).asSelect()
-    val query = Orm.select(root).from(root).where(root.get("finished").eql(new Boolean(false)))
+    val query = Orm.select(root).from(root)
+      .where(root.join("questions").get("correct").eql(new Boolean(false)))
     val quiz = session.first(query)
     JSON.stringify(quiz)
   })
@@ -49,7 +50,7 @@ class App {
   def newQuiz: String = dao.beginTransaction(session => {
     // 产生新的quiz并返回, 随机120单选30多选
     val root = Orm.root(classOf[Question]).asSelect()
-    val questions = session.query(Orm.select(root).from(root))
+    val questions = session.query(Orm.select(root).from(root)).sortBy(_=>Math.random())
     val single: Array[Question] = questions.filter(_.multi == false).take(12)
     val multi: Array[Question] = questions.filter(_.multi == true).take(3)
     var quiz = new Quiz
@@ -77,7 +78,11 @@ class App {
     val query = Orm.select(root).from(root)
       .where(root.get("id").eql(id))
     val quiz = session.first(query)
-    JSON.stringify(quiz)
+    val jo = JSON.convert(quiz).asObj()
+    jo.getArr("questions").array.zipWithIndex.foreach { case (node, idx) =>
+      node.asObj().setInt("_idx", idx + 1)
+    }
+    jo.toString()
   })
 
   @ResponseBody
