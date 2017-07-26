@@ -36,13 +36,12 @@ class App {
   def index: String = "index"
 
   @ResponseBody
-  @RequestMapping(value = Array("/quiz"), method = Array(RequestMethod.GET), produces = Array("application/json"))
-  def getCurrentQuiz: String = dao.beginTransaction(session => {
+  @RequestMapping(value = Array("/quizs"), method = Array(RequestMethod.GET), produces = Array("application/json"))
+  def getQuizs: String = dao.beginTransaction(session => {
     val root = Orm.root(classOf[Quiz]).asSelect()
     val query = Orm.select(root).from(root)
-      .where(root.join("questions").get("correct").eql(new Boolean(false)))
-    val quiz = session.first(query)
-    JSON.stringify(quiz)
+    val res = session.query(query)
+    JSON.stringify(res)
   })
 
   @ResponseBody
@@ -50,7 +49,7 @@ class App {
   def newQuiz: String = dao.beginTransaction(session => {
     // 产生新的quiz并返回, 随机120单选30多选
     val root = Orm.root(classOf[Question]).asSelect()
-    val questions = session.query(Orm.select(root).from(root)).sortBy(_=>Math.random())
+    val questions = session.query(Orm.select(root).from(root)).sortBy(_ => Math.random())
     val single: Array[Question] = questions.filter(_.multi == false).take(12)
     val multi: Array[Question] = questions.filter(_.multi == true).take(3)
     var quiz = new Quiz
@@ -72,7 +71,7 @@ class App {
 
   @ResponseBody
   @RequestMapping(value = Array("/quiz/{id}"), method = Array(RequestMethod.GET), produces = Array("application/json"))
-  def getQuizById(@PathVariable id: Long): String = dao.beginTransaction(session => {
+  def getQuiz(@PathVariable id: Long): String = dao.beginTransaction(session => {
     val root = Orm.root(classOf[Quiz]).asSelect()
     root.select("questions")
     val query = Orm.select(root).from(root)
@@ -119,9 +118,15 @@ class App {
   @RequestMapping(value = Array("/quiz/{id}"), method = Array(RequestMethod.PUT), produces = Array("application/json"))
   def putQuiz(@PathVariable id: Long, @RequestBody body: String): String = dao.beginTransaction(session => {
     val finished = JSON.parse(body).asObj().getBool("finished")
+    val corrected = JSON.parse(body).asObj().getBool("corrected")
     val quiz = Orm.empty(classOf[Quiz])
     quiz.id = id
-    quiz.finished = finished
+    if (finished) {
+      quiz.finished = finished
+    }
+    if (corrected) {
+      quiz.corrected = corrected
+    }
     session.execute(Orm.update(quiz))
     body
   })
