@@ -7,12 +7,12 @@ import org.springframework.stereotype.Controller
 import org.springframework.web.bind.annotation._
 import yy.orm.Orm
 import yy.rdpac.bean.Dao
-import yy.rdpac.entity.{Question, Quiz, QuizQuestion}
-import java.lang.Boolean
+import yy.rdpac.entity.{Question, Quiz, QuizQuestion, User}
 import java.lang.Long
+import javax.validation.constraints.NotNull
 
 import yy.json.JSON
-import yy.json.parse.JsonArr
+import yy.rdpac.kit.Kit
 
 /**
   * Created by <yuemenglong@126.com> on 2017/7/19.
@@ -36,37 +36,59 @@ class App {
   def index: String = "index"
 
   @ResponseBody
+  @RequestMapping(value = Array("/user"), method = Array(RequestMethod.POST), produces = Array("application/json"))
+  def registUser(@RequestBody body: String): Unit = dao.beginTransaction(session => {
+    val user = JSON.parse(body, classOf[User])
+    val ex = Orm.insert(user)
+    session.execute(ex)
+    JSON.stringify(user)
+  })
+
+  @ResponseBody
+  @RequestMapping(value = Array("/user"), method = Array(RequestMethod.GET), produces = Array("application/json"))
+  def getUserInfo(@NotNull wxId: String): String = dao.beginTransaction(session => {
+    val root = Orm.root(classOf[User]).asSelect()
+    root.select("quizs")
+    val query = Orm.select(root).from(root).where(root.get("wxId").eql(wxId))
+    val res = session.first(query)
+    JSON.stringify(res)
+  })
+
+  @ResponseBody
   @RequestMapping(value = Array("/quizs"), method = Array(RequestMethod.GET), produces = Array("application/json"))
-  def getQuizs: String = dao.beginTransaction(session => {
+  def getQuizs(@NotNull wxId: String): String = dao.beginTransaction(session => {
     val root = Orm.root(classOf[Quiz]).asSelect()
-    val query = Orm.select(root).from(root)
+    val query = Orm.select(root).from(root).where(root.join("user").get("wxId").eql(wxId))
     val res = session.query(query)
     JSON.stringify(res)
   })
 
   @ResponseBody
   @RequestMapping(value = Array("/quiz"), method = Array(RequestMethod.POST), produces = Array("application/json"))
-  def newQuiz: String = dao.beginTransaction(session => {
+  def newQuiz(@RequestBody body: String): String = dao.beginTransaction(session => {
+    val jo = JSON.parse(body).asObj()
     // 产生新的quiz并返回, 随机120单选30多选
     val root = Orm.root(classOf[Question]).asSelect()
-    val questions = session.query(Orm.select(root).from(root)).sortBy(_ => Math.random())
+    val questions = session.query(Orm.select(root).from(root))
     val single: Array[Question] = questions.filter(_.multi == false).take(12)
     val multi: Array[Question] = questions.filter(_.multi == true).take(3)
     var quiz = new Quiz
-    val quizQuestions: Array[QuizQuestion] = (single ++ multi).map(qt => {
-      val ret = Orm.convert(new QuizQuestion)
-      ret.info = qt
-      ret
-    })
+    val quizQuestions: Array[QuizQuestion] = (single ++ multi).zipWithIndex
+      .map { case (qt, idx) =>
+        val ret = Orm.convert(new QuizQuestion)
+        ret.info = qt
+        ret.idx = idx + 1
+        ret
+      }
     quiz.questions = quizQuestions
     quiz.count = quizQuestions.length
+    quiz.userId = jo.getLong("userId")
     quiz = Orm.convert(quiz)
     val ex = Orm.insert(quiz)
     ex.insert("questions")
     session.execute(ex)
     val ret = JSON.convert(quiz).asObj()
-    ret.remove("questions")
-    ret.toString()
+    ret.toJsString
   })
 
   @ResponseBody
@@ -77,11 +99,7 @@ class App {
     val query = Orm.select(root).from(root)
       .where(root.get("id").eql(id))
     val quiz = session.first(query)
-    val jo = JSON.convert(quiz).asObj()
-    jo.getArr("questions").array.zipWithIndex.foreach { case (node, idx) =>
-      node.asObj().setInt("_idx", idx + 1)
-    }
-    jo.toString()
+    JSON.stringify(quiz)
   })
 
   @ResponseBody
@@ -122,7 +140,7 @@ class App {
     val quiz = Orm.empty(classOf[Quiz])
     quiz.id = id
     if (finished) {
-      quiz.finished = finished
+      quiz.answered = finished
     }
     if (corrected) {
       quiz.corrected = corrected

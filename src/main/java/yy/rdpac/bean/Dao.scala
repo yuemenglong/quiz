@@ -3,6 +3,7 @@ package yy.rdpac.bean
 import javax.annotation.PostConstruct
 
 import org.springframework.stereotype.Component
+import yy.json.JSON
 import yy.orm.Orm
 import yy.orm.Session.Session
 import yy.orm.db.Db
@@ -17,8 +18,9 @@ class Dao {
 
   @PostConstruct
   def init(): Unit = {
-    Orm.init("yy/rdpac/entity")
+    Orm.init("yy.rdpac.entity")
     db = Orm.openDb("localhost", 3306, "root", "root", "rdpac")
+    JSON.setConstructorMap(Orm.getEmptyConstructorMap)
   }
 
   def beginTransaction[T](fn: (Session) => T): T = {

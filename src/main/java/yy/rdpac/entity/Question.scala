@@ -37,6 +37,7 @@ class QuizQuestion {
   @Pointer
   var quiz: Quiz = _
 
+  var idx: Integer = _
   var answer: String = _
   var fails: Integer = 0
   var correct: Boolean = false
@@ -55,6 +56,20 @@ class Quiz {
   var questions: Array[QuizQuestion] = Array()
   var count: Integer = _
 
-  var finished: Boolean = false
+  var answered: Boolean = false
   var corrected: Boolean = false
+
+  @Pointer
+  var user: User = _
+  var userId: Long = _
+}
+
+@Entity
+class User {
+  @Id(auto = true)
+  var id: Long = _
+  var wxId: String = _
+
+  @OneToMany
+  var quizs: Array[Quiz] = Array()
 }
