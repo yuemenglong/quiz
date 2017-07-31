@@ -12,7 +12,6 @@ import java.lang.Long
 import javax.validation.constraints.NotNull
 
 import yy.json.JSON
-import yy.rdpac.kit.Kit
 
 /**
   * Created by <yuemenglong@126.com> on 2017/7/19.
@@ -138,12 +137,12 @@ class App {
   @ResponseBody
   @RequestMapping(value = Array("/quiz/{id}"), method = Array(RequestMethod.PUT), produces = Array("application/json"))
   def putQuiz(@PathVariable id: Long, @RequestBody body: String): String = dao.beginTransaction(session => {
-    val finished = JSON.parse(body).asObj().getBool("finished")
+    val answered = JSON.parse(body).asObj().getBool("answered")
     val corrected = JSON.parse(body).asObj().getBool("corrected")
     val quiz = Orm.empty(classOf[Quiz])
     quiz.id = id
-    if (finished) {
-      quiz.answered = finished
+    if (answered) {
+      quiz.answered = answered
     }
     if (corrected) {
       quiz.corrected = corrected
