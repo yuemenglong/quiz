@@ -37,11 +37,13 @@ class App {
 
   @ResponseBody
   @RequestMapping(value = Array("/user"), method = Array(RequestMethod.POST), produces = Array("application/json"))
-  def registUser(@RequestBody body: String): Unit = dao.beginTransaction(session => {
+  def registUser(@RequestBody body: String): String = dao.beginTransaction(session => {
     val user = JSON.parse(body, classOf[User])
     val ex = Orm.insert(user)
     session.execute(ex)
-    JSON.stringify(user)
+    val ret = JSON.stringify(user)
+    println(ret)
+    ret
   })
 
   @ResponseBody
@@ -76,7 +78,7 @@ class App {
     val quizQuestions: Array[QuizQuestion] = (single ++ multi).zipWithIndex
       .map { case (qt, idx) =>
         val ret = Orm.convert(new QuizQuestion)
-        ret.info = qt
+        ret.infoId = qt.id
         ret.idx = idx + 1
         ret
       }
@@ -87,8 +89,9 @@ class App {
     val ex = Orm.insert(quiz)
     ex.insert("questions")
     session.execute(ex)
-    val ret = JSON.convert(quiz).asObj()
-    ret.toJsString
+    JSON.stringify(quiz)
+    //    val ret = JSON.convert(quiz).asObj()
+    //    ret.toJsString
   })
 
   @ResponseBody
