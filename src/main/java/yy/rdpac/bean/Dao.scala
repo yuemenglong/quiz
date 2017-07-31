@@ -1,13 +1,19 @@
 package yy.rdpac.bean
 
+import java.util.regex.Pattern
 import javax.annotation.PostConstruct
 
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.beans.factory.config.BeanDefinition
+import org.springframework.context.annotation.ClassPathScanningCandidateComponentProvider
+import org.springframework.core.`type`.filter.RegexPatternTypeFilter
 import org.springframework.stereotype.Component
 import yy.json.JSON
 import yy.orm.Orm
 import yy.orm.Session.Session
 import yy.orm.db.Db
+
+import scala.reflect.ClassTag
 
 /**
   * Created by <yuemenglong@126.com> on 2017/7/19.
@@ -30,7 +36,12 @@ class Dao {
 
   @PostConstruct
   def init(): Unit = {
-    Orm.init("yy.rdpac.entity")
+    val provider = new ClassPathScanningCandidateComponentProvider(false)
+    provider.addIncludeFilter(new RegexPatternTypeFilter(Pattern.compile(".*")))
+    val classes = provider.findCandidateComponents("yy.rdpac")
+    val paths = classes.toArray.map(_.asInstanceOf[BeanDefinition].getBeanClassName)
+    //val paths = classes.stream().map(_.getBeanClassName).toArray(ClassTag[String](classOf[String]))
+    Orm.init(paths)
     db = Orm.openDb(host, port, user, pwd, database)
     JSON.setConstructorMap(Orm.getEmptyConstructorMap)
   }
