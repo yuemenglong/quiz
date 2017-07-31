@@ -12,6 +12,7 @@ import java.lang.Long
 import javax.validation.constraints.NotNull
 
 import yy.json.JSON
+import yy.rdpac.kit.Shaffle
 
 /**
   * Created by <yuemenglong@126.com> on 2017/7/19.
@@ -70,9 +71,9 @@ class App {
     val jo = JSON.parse(body).asObj()
     // 产生新的quiz并返回, 随机120单选30多选
     val root = Orm.root(classOf[Question]).asSelect()
-    val questions = session.query(Orm.select(root).from(root))
-    val single: Array[Question] = questions.filter(_.multi == false).take(12)
-    val multi: Array[Question] = questions.filter(_.multi == true).take(3)
+    val questions = Shaffle.shaffle(session.query(Orm.select(root).from(root)))
+    val single: Array[Question] = questions.filter(_.multi == false).take(12).toArray
+    val multi: Array[Question] = questions.filter(_.multi == true).take(3).toArray
     var quiz = new Quiz
     val quizQuestions: Array[QuizQuestion] = (single ++ multi).zipWithIndex
       .map { case (qt, idx) =>
