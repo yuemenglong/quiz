@@ -9,18 +9,15 @@ import org.springframework.context.annotation.ClassPathScanningCandidateComponen
 import org.springframework.core.`type`.filter.RegexPatternTypeFilter
 import org.springframework.stereotype.Component
 import yy.json.JSON
-import yy.orm.Orm
-import yy.orm.Session.Session
-import yy.orm.db.Db
-
-import scala.reflect.ClassTag
+import io.github.yuemenglong.orm.Orm
+import io.github.yuemenglong.orm.Session.Session
+import io.github.yuemenglong.orm.db.Db
 
 /**
   * Created by <yuemenglong@126.com> on 2017/7/19.
   */
 @Component
 class Dao {
-
   var db: Db = _
 
   @Value("${db.host}")
@@ -43,6 +40,7 @@ class Dao {
     //val paths = classes.stream().map(_.getBeanClassName).toArray(ClassTag[String](classOf[String]))
     Orm.init(paths)
     db = Orm.openDb(host, port, user, pwd, database)
+    db.check()
     JSON.setConstructorMap(Orm.getEmptyConstructorMap)
   }
 

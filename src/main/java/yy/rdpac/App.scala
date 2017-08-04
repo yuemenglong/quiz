@@ -5,9 +5,9 @@ import org.springframework.boot.SpringApplication
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.stereotype.Controller
 import org.springframework.web.bind.annotation._
-import yy.orm.Orm
+import io.github.yuemenglong.orm.Orm
 import yy.rdpac.bean.Dao
-import yy.rdpac.entity.{Question, Quiz, QuizQuestion, User}
+import yy.rdpac.entity._
 import java.lang.Long
 import javax.validation.constraints.NotNull
 
@@ -90,8 +90,6 @@ class App {
     ex.insert("questions")
     session.execute(ex)
     JSON.stringify(quiz)
-    //    val ret = JSON.convert(quiz).asObj()
-    //    ret.toJsString
   })
 
   @ResponseBody
@@ -150,6 +148,17 @@ class App {
     }
     session.execute(Orm.update(quiz))
     body
+  })
+
+  @ResponseBody
+  @RequestMapping(value = Array("/debug"), method = Array(RequestMethod.POST), produces = Array("application/json"))
+  def postDebugInfo(@NotNull userId: Long, @RequestBody body: String): String = dao.beginTransaction(session => {
+    val info = new DebugInfo
+    info.info = body
+    info.userId = userId
+    val ex = Orm.insert(Orm.convert(info))
+    session.execute(ex)
+    ""
   })
 }
 

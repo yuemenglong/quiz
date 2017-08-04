@@ -1,9 +1,7 @@
 package yy.rdpac.entity
 
-import yy.orm.lang.anno._
-import java.lang.Long
-import java.lang.Boolean
-import java.util.Date
+import io.github.yuemenglong.orm.lang.anno._
+import io.github.yuemenglong.orm.lang.types.Types._
 
 /**
   * Created by <yuemenglong@126.com> on 2017/7/17.
@@ -72,4 +70,15 @@ class User {
 
   @OneToMany
   var quizs: Array[Quiz] = Array()
+}
+
+@Entity
+class DebugInfo {
+
+  @Id(auto = true)
+  var id: Long = _
+  var userId: Long = _
+  var info: String = _
+  @DateTime
+  var createTime: Date = new Date
 }

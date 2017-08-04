@@ -1,7 +1,7 @@
 package yy.rdpac.parser
 
 import yy.rdpac.entity.Question
-import yy.orm.Orm
+import io.github.yuemenglong.orm.Orm
 
 import scala.collection.mutable.ArrayBuffer
 import scala.io.Source
