@@ -67,15 +67,21 @@ class App {
 
   @ResponseBody
   @RequestMapping(value = Array("/quiz"), method = Array(RequestMethod.POST), produces = Array("application/json"))
-  def newQuiz(@RequestBody body: String): String = dao.beginTransaction(session => {
+  def newQuiz(@RequestBody body: String, single: Integer, multi: Integer): String = dao.beginTransaction(session => {
     val jo = JSON.parse(body).asObj()
     // 产生新的quiz并返回, 随机120单选30多选
     val root = Orm.root(classOf[Question]).asSelect()
     val questions = Shaffle.shaffle(session.query(Orm.select(root).from(root)))
-    val single: Array[Question] = questions.filter(_.multi == false).take(12).toArray
-    val multi: Array[Question] = questions.filter(_.multi == true).take(3).toArray
+    val sm: (Integer, Integer) = (single, multi) match {
+      case (null, null) => (24, 6)
+      case (null, _) => (24, 6)
+      case (_, null) => (24, 6)
+      case (s, m) => (s, m)
+    }
+    val singleQuestion: Array[Question] = questions.filter(_.multi == false).take(sm._1).toArray
+    val multiQuestion: Array[Question] = questions.filter(_.multi == true).take(sm._2).toArray
     var quiz = new Quiz
-    val quizQuestions: Array[QuizQuestion] = (single ++ multi).zipWithIndex
+    val quizQuestions: Array[QuizQuestion] = (singleQuestion ++ multiQuestion).zipWithIndex
       .map { case (qt, idx) =>
         val ret = Orm.convert(new QuizQuestion)
         ret.infoId = qt.id
