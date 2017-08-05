@@ -51,9 +51,16 @@ class App {
   def getUserInfo(@NotNull wxId: String): String = dao.beginTransaction(session => {
     val root = Orm.root(classOf[User]).asSelect()
     root.select("quizs")
+    root.select("study").select("quiz")
     val query = Orm.select(root).from(root).where(root.get("wxId").eql(wxId))
-    val res = session.first(query)
-    JSON.stringify(res)
+    val user = session.first(query)
+    if (user.study == null) {
+      val study = Orm.convert(new Study)
+      val ex = Orm.insert(study)
+      session.execute(ex)
+      user.study = study
+    }
+    JSON.stringify(user)
   })
 
   @ResponseBody
@@ -67,27 +74,32 @@ class App {
 
   @ResponseBody
   @RequestMapping(value = Array("/quiz"), method = Array(RequestMethod.POST), produces = Array("application/json"))
-  def newQuiz(@RequestBody body: String, single: Integer, multi: Integer): String = dao.beginTransaction(session => {
+  def newQuiz(@RequestBody body: String, single: Integer, multi: Integer, start: Integer, end: Integer): String = dao.beginTransaction(session => {
     val jo = JSON.parse(body).asObj()
-    // 产生新的quiz并返回, 随机120单选30多选
     val root = Orm.root(classOf[Question]).asSelect()
-    val questions = Shaffle.shaffle(session.query(Orm.select(root).from(root)))
-    val sm: (Integer, Integer) = (single, multi) match {
-      case (null, null) => (24, 6)
-      case (null, _) => (24, 6)
-      case (_, null) => (24, 6)
-      case (s, m) => (s, m)
+    val questions = session.query(Orm.select(root).from(root))
+    val selected = (single, multi, start, end) match {
+      case (null, null, s, e) if s != null && e != null => questions.slice(s, e + 1)
+      case (s, m, null, null) =>
+        val shuffled = Shaffle.shaffle(questions)
+        val sm: (Integer, Integer) = (s, m) match {
+          case (null, null) => (24, 6)
+          case (null, _) => (24, 6)
+          case (_, null) => (24, 6)
+          case (_, _) => (s, m)
+        }
+        val singleQuestion: Array[Question] = shuffled.filter(_.multi == false).take(sm._1).toArray
+        val multiQuestion: Array[Question] = shuffled.filter(_.multi == true).take(sm._2).toArray
+        singleQuestion ++ multiQuestion
+      case (_, _, _, _) => throw new RuntimeException("Invalid Get Quiz Params")
     }
-    val singleQuestion: Array[Question] = questions.filter(_.multi == false).take(sm._1).toArray
-    val multiQuestion: Array[Question] = questions.filter(_.multi == true).take(sm._2).toArray
     var quiz = new Quiz
-    val quizQuestions: Array[QuizQuestion] = (singleQuestion ++ multiQuestion).zipWithIndex
-      .map { case (qt, idx) =>
-        val ret = Orm.convert(new QuizQuestion)
-        ret.infoId = qt.id
-        ret.idx = idx + 1
-        ret
-      }
+    val quizQuestions: Array[QuizQuestion] = selected.zipWithIndex.map { case (qt, idx) =>
+      val ret = Orm.convert(new QuizQuestion)
+      ret.infoId = qt.id
+      ret.idx = idx + 1
+      ret
+    }
     quiz.questions = quizQuestions
     quiz.count = quizQuestions.length
     quiz.userId = jo.getLong("userId")
@@ -165,6 +177,16 @@ class App {
     val ex = Orm.insert(Orm.convert(info))
     session.execute(ex)
     ""
+  })
+
+  @ResponseBody
+  @RequestMapping(value = Array("/study/{id}"), method = Array(RequestMethod.PUT), produces = Array("application/json"))
+  def putStudy(id: Long, @RequestBody body: String): String = dao.beginTransaction(session => {
+    val study = JSON.parse(body, classOf[Study])
+    study.id = id
+    val ex = Orm.update(study)
+    session.execute(ex)
+    body
   })
 }
 

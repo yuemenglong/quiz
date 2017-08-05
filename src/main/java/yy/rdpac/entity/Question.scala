@@ -68,6 +68,8 @@ class User {
   var id: Long = _
   var wxId: String = _
 
+  @Pointer
+  var study: Study = new Study
   @OneToMany
   var quizs: Array[Quiz] = Array()
 }
@@ -81,4 +83,17 @@ class DebugInfo {
   var info: String = _
   @DateTime
   var createTime: Date = new Date
+}
+
+@Entity
+class Study {
+  @Id(auto = true)
+  var id: Long = _
+  // 学习到第几题了
+  var studyIdx: Integer = -1
+  var finishIdx: Integer = -1
+  // 与学习相关的quiz
+  @Pointer
+  var quiz: Quiz = _
+  var quizId: Long = _
 }
