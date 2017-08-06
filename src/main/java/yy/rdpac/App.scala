@@ -59,6 +59,8 @@ class App {
       val ex = Orm.insert(study)
       session.execute(ex)
       user.study = study
+      val ex2 = Orm.update(user)
+      session.execute(ex2)
     }
     JSON.stringify(user)
   })
@@ -136,6 +138,7 @@ class App {
     val answer = JSON.parse(body).asObj().getStr("answer")
     val root = Orm.root(classOf[QuizQuestion]).asSelect()
     root.select("info")
+    // 查询题目
     val question = session.first(Orm.from(root).where(root.get("id").eql(qtId)))
     // 1. 设置答案，正确性与错误次数
     require(question != null)
@@ -158,10 +161,10 @@ class App {
     val corrected = JSON.parse(body).asObj().getBool("corrected")
     val quiz = Orm.empty(classOf[Quiz])
     quiz.id = id
-    if (answered) {
+    if (answered != null) {
       quiz.answered = answered
     }
-    if (corrected) {
+    if (corrected != null) {
       quiz.corrected = corrected
     }
     session.execute(Orm.update(quiz))
@@ -181,7 +184,7 @@ class App {
 
   @ResponseBody
   @RequestMapping(value = Array("/study/{id}"), method = Array(RequestMethod.PUT), produces = Array("application/json"))
-  def putStudy(id: Long, @RequestBody body: String): String = dao.beginTransaction(session => {
+  def putStudy(@PathVariable id: Long, @RequestBody body: String): String = dao.beginTransaction(session => {
     val study = JSON.parse(body, classOf[Study])
     study.id = id
     val ex = Orm.update(study)

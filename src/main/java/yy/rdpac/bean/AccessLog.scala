@@ -22,7 +22,7 @@ class AccessLog extends Filter {
     response.setHeader("Cache-Control", "no-cache")
     response.setHeader("Pragma", "no-cache")
     response.setDateHeader("expires", -1)
-    println(request.getRequestURI, request.getQueryString)
+    println(request.getMethod, request.getRequestURI, request.getQueryString)
     filterChain.doFilter(servletRequest, servletResponse)
   }
 }
