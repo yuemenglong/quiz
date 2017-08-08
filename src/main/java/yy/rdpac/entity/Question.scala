@@ -57,6 +57,8 @@ class Quiz {
   var answered: Boolean = false
   var corrected: Boolean = false
 
+  var reviewIdx: Integer = 0
+
   @Pointer
   var user: User = _
   var userId: Long = _

@@ -161,16 +161,8 @@ class App {
   @ResponseBody
   @RequestMapping(value = Array("/quiz/{id}"), method = Array(RequestMethod.PUT), produces = Array("application/json"))
   def putQuiz(@PathVariable id: Long, @RequestBody body: String): String = dao.beginTransaction(session => {
-    val answered = JSON.parse(body).asObj().getBool("answered")
-    val corrected = JSON.parse(body).asObj().getBool("corrected")
-    val quiz = Orm.empty(classOf[Quiz])
+    val quiz = JSON.parse(body, classOf[Quiz])
     quiz.id = id
-    if (answered != null) {
-      quiz.answered = answered
-    }
-    if (corrected != null) {
-      quiz.corrected = corrected
-    }
     session.execute(Orm.update(quiz))
     body
   })
