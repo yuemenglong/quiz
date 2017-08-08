@@ -40,6 +40,7 @@ class App {
   def registUser(@RequestBody body: String): String = dao.beginTransaction(session => {
     val user = JSON.parse(body, classOf[User])
     val ex = Orm.insert(user)
+    ex.insert("study")
     session.execute(ex)
     val ret = JSON.stringify(user)
     println(ret)
@@ -54,14 +55,17 @@ class App {
     root.select("study").select("quiz")
     val query = Orm.select(root).from(root).where(root.get("wxId").eql(wxId))
     val user = session.first(query)
-    if (user.study == null) {
-      val study = Orm.convert(new Study)
-      val ex = Orm.insert(study)
-      session.execute(ex)
-      user.study = study
-      val ex2 = Orm.update(user)
-      session.execute(ex2)
-    }
+    //    if (user == null) {
+    //      return "null"
+    //    }
+    //    if (user.study == null) {
+    //      val study = Orm.convert(new Study)
+    //      val ex = Orm.insert(study)
+    //      session.execute(ex)
+    //      user.study = study
+    //      val ex2 = Orm.update(user)
+    //      session.execute(ex2)
+    //    }
     JSON.stringify(user)
   })
 
