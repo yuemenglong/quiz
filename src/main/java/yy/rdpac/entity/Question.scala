@@ -57,6 +57,7 @@ class Quiz {
   var answered: Boolean = false
   var corrected: Boolean = false
 
+  var answerIdx: Integer = 0
   var reviewIdx: Integer = 0
 
   @Pointer

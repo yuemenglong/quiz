@@ -164,7 +164,7 @@ class App {
     val quiz = JSON.parse(body, classOf[Quiz])
     quiz.id = id
     session.execute(Orm.update(quiz))
-    body
+    JSON.stringify(quiz)
   })
 
   @ResponseBody
