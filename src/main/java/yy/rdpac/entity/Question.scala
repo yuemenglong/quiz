@@ -54,6 +54,7 @@ class Quiz {
   var questions: Array[QuizQuestion] = Array()
   var count: Integer = _
 
+  var mode: String = "answer"
   var answered: Boolean = false
   var corrected: Boolean = false
 

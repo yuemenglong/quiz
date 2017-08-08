@@ -81,7 +81,6 @@ class App {
   @ResponseBody
   @RequestMapping(value = Array("/quiz"), method = Array(RequestMethod.POST), produces = Array("application/json"))
   def newQuiz(@RequestBody body: String, single: Integer, multi: Integer, start: Integer, end: Integer): String = dao.beginTransaction(session => {
-    val jo = JSON.parse(body).asObj()
     val root = Orm.root(classOf[Question]).asSelect()
     val questions = session.query(Orm.select(root).from(root))
     val selected = (single, multi, start, end) match {
@@ -99,16 +98,18 @@ class App {
         singleQuestion ++ multiQuestion
       case (_, _, _, _) => throw new RuntimeException("Invalid Get Quiz Params")
     }
+    val jo = JSON.parse(body).asObj()
     var quiz = new Quiz
+    quiz.userId = jo.getLong("userId")
+    quiz.mode = jo.getStr("mode")
     val quizQuestions: Array[QuizQuestion] = selected.zipWithIndex.map { case (qt, idx) =>
       val ret = Orm.convert(new QuizQuestion)
       ret.infoId = qt.id
       ret.idx = idx + 1
       ret
     }
-    quiz.questions = quizQuestions
+    quiz.questions = quizQuestions.slice(23, 25)
     quiz.count = quizQuestions.length
-    quiz.userId = jo.getLong("userId")
     quiz = Orm.convert(quiz)
     val ex = Orm.insert(quiz)
     ex.insert("questions")
