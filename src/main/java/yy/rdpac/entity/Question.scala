@@ -72,7 +72,7 @@ class User {
   var id: Long = _
   var wxId: String = _
 
-  @Pointer
+  @OneToOne
   var study: Study = new Study
   @OneToMany
   var quizs: Array[Quiz] = Array()
@@ -80,7 +80,6 @@ class User {
 
 @Entity
 class DebugInfo {
-
   @Id(auto = true)
   var id: Long = _
   var userId: Long = _
@@ -93,9 +92,8 @@ class DebugInfo {
 class Study {
   @Id(auto = true)
   var id: Long = _
-  // 学习到第几题了
+  // 学习过第几题了
   var studyIdx: Integer = -1
-  var finishIdx: Integer = -1
   // 与学习相关的quiz
   @Pointer
   var quiz: Quiz = _

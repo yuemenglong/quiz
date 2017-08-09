@@ -39,6 +39,7 @@ class App {
   @RequestMapping(value = Array("/user"), method = Array(RequestMethod.POST), produces = Array("application/json"))
   def registUser(@RequestBody body: String): String = dao.beginTransaction(session => {
     val user = JSON.parse(body, classOf[User])
+    user.study = Orm.convert(new Study)
     val ex = Orm.insert(user)
     ex.insert("study")
     session.execute(ex)
@@ -108,7 +109,7 @@ class App {
       ret.idx = idx + 1
       ret
     }
-    quiz.questions = quizQuestions.slice(23, 25)
+    quiz.questions = quizQuestions
     quiz.count = quizQuestions.length
     quiz = Orm.convert(quiz)
     val ex = Orm.insert(quiz)
