@@ -53,6 +53,7 @@ class App {
   def getUserInfo(@NotNull wxId: String): String = dao.beginTransaction(session => {
     val root = Orm.root(classOf[User]).asSelect()
     root.select("quizs")
+    root.select("marks")
     root.select("study").select("quiz")
     val query = Orm.select(root).from(root).where(root.get("wxId").eql(wxId))
     val user = session.first(query)
@@ -196,5 +197,27 @@ class App {
     session.execute(ex)
     body
   })
+
+  @ResponseBody
+  @RequestMapping(value = Array("/user/{userId}/mark"), method = Array(RequestMethod.POST), produces = Array("application/json"))
+  def postMark(@PathVariable userId: Long, @RequestBody body: String): String = dao.beginTransaction(session => {
+    val jo = JSON.parse(body).asObj()
+    val mark = new Mark
+    mark.infoId = jo.getLong("infoId")
+    mark.userId = userId
+    val e = Orm.convert(mark)
+    session.execute(Orm.insert(e))
+    JSON.stringify(e)
+  })
+
+  @ResponseBody
+  @RequestMapping(value = Array("/mark/{id}"), method = Array(RequestMethod.DELETE), produces = Array("application/json"))
+  def deleteMark(@PathVariable id: Long): Unit = dao.beginTransaction(session => {
+    val mark = new Mark
+    mark.id = id
+    val e = Orm.convert(mark)
+    session.execute(Orm.delete(e))
+  })
+
 }
 

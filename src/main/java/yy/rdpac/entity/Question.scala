@@ -1,6 +1,7 @@
 package yy.rdpac.entity
 
 import io.github.yuemenglong.orm.lang.anno._
+import io.github.yuemenglong.orm.lang.types.Types
 import io.github.yuemenglong.orm.lang.types.Types._
 
 /**
@@ -79,6 +80,17 @@ class User {
   var study: Study = new Study
   @OneToMany
   var quizs: Array[Quiz] = Array()
+
+  @OneToMany(right = "userId")
+  var marks: Array[Mark] = Array()
+}
+
+@Entity
+class Mark {
+  @Id(auto = true)
+  var id: Long = _
+  var infoId: Long = _
+  var userId: Long = _
 }
 
 @Entity
