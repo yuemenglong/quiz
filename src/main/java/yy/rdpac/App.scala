@@ -155,6 +155,12 @@ class App {
     }
     // 2. 更新question
     session.execute(Orm.update(question))
+    // 3. 更新quiz上的answerIdx
+    val quiz = new Quiz
+    quiz.answerIdx = question.idx
+    quiz.id = question.quizId
+    session.execute(Orm.update(Orm.convert(quiz)))
+    // 4. 返回计算后的question
     val jo = JSON.convert(question).asObj()
     jo.remove("info")
     jo.toString()
