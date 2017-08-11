@@ -55,6 +55,9 @@ class Quiz {
   var count: Integer = _
 
   var mode: String = "answer"
+  @Column(nullable = false)
+  var tag: String = _
+
   var answered: Boolean = false
   var corrected: Boolean = false
 

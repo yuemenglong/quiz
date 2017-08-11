@@ -103,6 +103,7 @@ class App {
     var quiz = new Quiz
     quiz.userId = jo.getLong("userId")
     quiz.mode = jo.getStr("mode")
+    quiz.tag = jo.getStr("tag")
     val quizQuestions: Array[QuizQuestion] = selected.zipWithIndex.map { case (qt, idx) =>
       val ret = Orm.convert(new QuizQuestion)
       ret.infoId = qt.id
