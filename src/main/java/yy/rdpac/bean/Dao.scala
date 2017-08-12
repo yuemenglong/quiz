@@ -53,7 +53,10 @@ class Dao {
       ret
     } catch {
       case e: Exception =>
+        println("ROLL BACK")
         tx.rollback()
+        println(e.getMessage)
+        e.printStackTrace()
         throw e
     } finally {
       session.close()

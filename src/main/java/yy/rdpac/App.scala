@@ -84,39 +84,40 @@ class App {
       quiz.count = 0
       quiz = Orm.convert(quiz)
       session.execute(Orm.insert(quiz))
-      return JSON.stringify(quiz)
-    }
-    val root = Orm.root(classOf[Question]).asSelect()
-    val questions = session.query(Orm.select(root).from(root))
-    val selected = (single, multi, start, end) match {
-      case (null, null, s, e) if s != null && e != null => questions.slice(s, e + 1)
-      case (s, m, null, null) =>
-        val shuffled = Shaffle.shaffle(questions)
-        val sm: (Integer, Integer) = (s, m) match {
-          case (null, null) => (24, 6)
-          case (null, _) => (24, 6)
-          case (_, null) => (24, 6)
-          case (_, _) => (s, m)
-        }
-        val singleQuestion: Array[Question] = shuffled.filter(_.multi == false).take(sm._1).toArray
-        val multiQuestion: Array[Question] = shuffled.filter(_.multi == true).take(sm._2).toArray
-        singleQuestion ++ multiQuestion
-      case (_, _, _, _) => throw new RuntimeException("Invalid Get Quiz Params")
-    }
+      JSON.stringify(quiz)
+    } else {
+      val root = Orm.root(classOf[Question]).asSelect()
+      val questions = session.query(Orm.select(root).from(root))
+      val selected = (single, multi, start, end) match {
+        case (null, null, s, e) if s != null && e != null => questions.slice(s, e + 1)
+        case (s, m, null, null) =>
+          val shuffled = Shaffle.shaffle(questions)
+          val sm: (Integer, Integer) = (s, m) match {
+            case (null, null) => (24, 6)
+            case (null, _) => (24, 6)
+            case (_, null) => (24, 6)
+            case (_, _) => (s, m)
+          }
+          val singleQuestion: Array[Question] = shuffled.filter(_.multi == false).take(sm._1).toArray
+          val multiQuestion: Array[Question] = shuffled.filter(_.multi == true).take(sm._2).toArray
+          singleQuestion ++ multiQuestion
+        case (_, _, _, _) => throw new RuntimeException("Invalid Get Quiz Params")
+      }
 
-    val quizQuestions: Array[QuizQuestion] = selected.zipWithIndex.map { case (qt, idx) =>
-      val ret = Orm.convert(new QuizQuestion)
-      ret.infoId = qt.id
-      ret.idx = idx + 1
-      ret
+      val quizQuestions: Array[QuizQuestion] = selected.zipWithIndex.map { case (qt, idx) =>
+        val ret = Orm.convert(new QuizQuestion)
+        ret.infoId = qt.id
+        ret.idx = idx + 1
+        ret
+      }
+      quiz.questions = quizQuestions
+      quiz.count = quizQuestions.length
+      quiz = Orm.convert(quiz)
+      val ex = Orm.insert(quiz)
+      ex.insert("questions")
+      session.execute(ex)
+      JSON.stringify(quiz)
     }
-    quiz.questions = quizQuestions
-    quiz.count = quizQuestions.length
-    quiz = Orm.convert(quiz)
-    val ex = Orm.insert(quiz)
-    ex.insert("questions")
-    session.execute(ex)
-    JSON.stringify(quiz)
   })
 
   @ResponseBody
