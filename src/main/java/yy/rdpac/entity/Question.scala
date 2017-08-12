@@ -109,6 +109,7 @@ class Study {
   var id: Long = _
   // 学习过第几题了
   var studyIdx: Integer = -1
+  var quizIdx: Integer = -1
   // 与学习相关的quiz
   @Pointer
   var quiz: Quiz = _

@@ -57,17 +57,6 @@ class App {
     root.select("study").select("quiz")
     val query = Orm.select(root).from(root).where(root.get("wxId").eql(wxId))
     val user = session.first(query)
-    //    if (user == null) {
-    //      return "null"
-    //    }
-    //    if (user.study == null) {
-    //      val study = Orm.convert(new Study)
-    //      val ex = Orm.insert(study)
-    //      session.execute(ex)
-    //      user.study = study
-    //      val ex2 = Orm.update(user)
-    //      session.execute(ex2)
-    //    }
     JSON.stringify(user)
   })
 
@@ -158,7 +147,7 @@ class App {
     // 2. 更新question
     session.execute(Orm.update(question))
     // 3. 更新quiz上的answerIdx
-    val quiz = new Quiz
+    val quiz = Orm.empty(classOf[Quiz])
     quiz.answerIdx = question.idx
     quiz.id = question.quizId
     session.execute(Orm.update(Orm.convert(quiz)))
