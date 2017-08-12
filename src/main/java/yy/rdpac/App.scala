@@ -71,7 +71,21 @@ class App {
 
   @ResponseBody
   @RequestMapping(value = Array("/quiz"), method = Array(RequestMethod.POST), produces = Array("application/json"))
-  def newQuiz(@RequestBody body: String, single: Integer, multi: Integer, start: Integer, end: Integer): String = dao.beginTransaction(session => {
+  def newQuiz(@RequestBody body: String,
+              single: Integer, multi: Integer,
+              start: Integer, end: Integer,
+              empty: Boolean): String = dao.beginTransaction(session => {
+    val jo = JSON.parse(body).asObj()
+    var quiz = new Quiz
+    quiz.userId = jo.getLong("userId")
+    quiz.mode = jo.getStr("mode")
+    quiz.tag = jo.getStr("tag")
+    if (empty) {
+      quiz.count = 0
+      quiz = Orm.convert(quiz)
+      session.execute(Orm.insert(quiz))
+      return JSON.stringify(quiz)
+    }
     val root = Orm.root(classOf[Question]).asSelect()
     val questions = session.query(Orm.select(root).from(root))
     val selected = (single, multi, start, end) match {
@@ -89,11 +103,7 @@ class App {
         singleQuestion ++ multiQuestion
       case (_, _, _, _) => throw new RuntimeException("Invalid Get Quiz Params")
     }
-    val jo = JSON.parse(body).asObj()
-    var quiz = new Quiz
-    quiz.userId = jo.getLong("userId")
-    quiz.mode = jo.getStr("mode")
-    quiz.tag = jo.getStr("tag")
+
     val quizQuestions: Array[QuizQuestion] = selected.zipWithIndex.map { case (qt, idx) =>
       val ret = Orm.convert(new QuizQuestion)
       ret.infoId = qt.id
@@ -107,6 +117,19 @@ class App {
     ex.insert("questions")
     session.execute(ex)
     JSON.stringify(quiz)
+  })
+
+  @ResponseBody
+  @RequestMapping(value = Array("/quiz/{quizId}/question"), method = Array(RequestMethod.POST), produces = Array("application/json"))
+  def postQuizQuestion(@PathVariable quizId: Long, @RequestBody body: String): String = dao.beginTransaction(session => {
+    val root = Orm.root(classOf[QuizQuestion]).asSelect()
+    val query = Orm.select(root.count()).from(root).where(root.get("quizId").eql(quizId))
+    val count = session.first(query)
+    val question = JSON.parse(body, classOf[QuizQuestion])
+    question.idx = (count + 1).toInt
+    question.quizId = quizId
+    session.execute(Orm.insert(question))
+    JSON.stringify(question)
   })
 
   @ResponseBody
@@ -131,7 +154,7 @@ class App {
 
   @ResponseBody
   @RequestMapping(value = Array("/quiz/{qzId}/question/{qtId}"), method = Array(RequestMethod.PUT), produces = Array("application/json"))
-  def putAnswer(@PathVariable qzId: Long, @PathVariable qtId: Long, @RequestBody body: String): String = dao.beginTransaction(session => {
+  def putQuizQuestion(@PathVariable qzId: Long, @PathVariable qtId: Long, @RequestBody body: String): String = dao.beginTransaction(session => {
     val answer = JSON.parse(body).asObj().getStr("answer")
     val root = Orm.root(classOf[QuizQuestion]).asSelect()
     root.select("info")
