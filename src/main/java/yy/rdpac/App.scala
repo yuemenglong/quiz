@@ -167,6 +167,19 @@ class App {
   })
 
   @ResponseBody
+  @RequestMapping(value = Array("/quiz/{id}"), method = Array(RequestMethod.DELETE), produces = Array("application/json"))
+  def deleteQuiz(@PathVariable id: Long): Unit = dao.beginTransaction(session => {
+    {
+      val root = Orm.root(classOf[QuizQuestion])
+      session.execute(Orm.delete(root).where(root.get("quizId").eql(id)))
+    }
+    {
+      val root = Orm.root(classOf[Quiz])
+      session.execute(Orm.delete(root).where(root.get("id").eql(id)))
+    }
+  })
+
+  @ResponseBody
   @RequestMapping(value = Array("/quiz/{id}"), method = Array(RequestMethod.GET), produces = Array("application/json"))
   def getQuiz(@PathVariable id: Long): String = dao.beginTransaction(session => {
     val root = Orm.root(classOf[Quiz]).asSelect()
