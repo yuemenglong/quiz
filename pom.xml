@@ -5,7 +5,7 @@
     <!-- <!– The Basics –> -->
     <groupId>yy</groupId>
     <artifactId>rdpac</artifactId>
-    <version>1.0.1</version>
+    <version>1.0.2</version>
     <packaging>jar</packaging>
     <properties>
         <scala.version>2.12.2</scala.version>

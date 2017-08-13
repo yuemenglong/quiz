@@ -59,8 +59,7 @@ class Quiz {
   @Column(nullable = false)
   var tag: String = _
 
-  var answered: Boolean = false
-  var corrected: Boolean = false
+  var finished: Boolean = false
 
   var answerIdx: Integer = 0
   var reviewIdx: Integer = 0
@@ -107,9 +106,6 @@ class DebugInfo {
 class Study {
   @Id(auto = true)
   var id: Long = _
-  // 学习过第几题了 与quesiotnId对应
-  var studyIdx: Integer = 0
-  var quizIdx: Integer = 0
   // 与学习相关的quiz
   @Pointer
   var quiz: Quiz = _
