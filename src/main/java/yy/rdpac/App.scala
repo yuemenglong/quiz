@@ -74,7 +74,9 @@ class App {
   def newQuiz(@RequestBody body: String,
               single: Integer, multi: Integer,
               start: Integer, end: Integer,
-              empty: Boolean): String = dao.beginTransaction(session => {
+              chapter: Integer,
+              empty: Boolean
+             ): String = dao.beginTransaction(session => {
     val jo = JSON.parse(body).asObj()
     var quiz = new Quiz
     quiz.userId = jo.getLong("userId")
@@ -84,6 +86,23 @@ class App {
       quiz.count = 0
       quiz = Orm.convert(quiz)
       session.execute(Orm.insert(quiz))
+      JSON.stringify(quiz)
+    } else if (chapter != null) {
+      val root = Orm.root(classOf[Question]).asSelect()
+      val query = Orm.select(root).from(root).where(root.get("chapter").eql(chapter))
+      val questions = session.query(query)
+      quiz.count = questions.length
+      quiz.questions = questions.zipWithIndex.map(p => {
+        val (q, idx) = p
+        val ret = new QuizQuestion
+        ret.infoId = q.id
+        ret.idx = idx + 1
+        ret
+      })
+      quiz = Orm.convert(quiz)
+      val ex = Orm.insert(quiz)
+      ex.insert("questions")
+      session.execute(ex)
       JSON.stringify(quiz)
     } else {
       val root = Orm.root(classOf[Question]).asSelect()
@@ -130,6 +149,12 @@ class App {
     question.idx = (count + 1).toInt
     question.quizId = quizId
     session.execute(Orm.insert(question))
+    // 更新count
+    val quiz = new Quiz
+    quiz.id = quizId
+    quiz.count = (count + 1).toInt
+    session.execute(Orm.update(Orm.convert(quiz)))
+
     JSON.stringify(question)
   })
 
