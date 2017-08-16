@@ -75,14 +75,14 @@ class App {
               single: Integer, multi: Integer,
               start: Integer, end: Integer,
               chapter: Integer,
-              onlyMark: Boolean
+              marked: Boolean
              ): String = dao.beginTransaction(session => {
     val jo = JSON.parse(body).asObj()
     var quiz = new Quiz
     quiz.userId = jo.getLong("userId")
     quiz.mode = jo.getStr("mode")
     quiz.tag = jo.getStr("tag")
-    if (onlyMark) {
+    if (marked) {
       // 只获取收藏
       val root = Orm.root(classOf[Mark]).asSelect()
       root.select("info")
@@ -91,7 +91,7 @@ class App {
       quiz.questions = questions.zipWithIndex.map { case (q, idx) =>
         val qq = new QuizQuestion
         qq.infoId = q.id
-        qq.idx = idx
+        qq.idx = idx + 1
         qq
       }.toArray
       quiz.count = questions.length
