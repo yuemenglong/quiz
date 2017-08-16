@@ -223,7 +223,7 @@ class App {
     // 1. 设置答案，正确性与错误次数
     require(question != null)
     question.answer = answer
-    question.correct = question.info.answer == answer
+    question.correct = question.getCorrectAnswer == answer
     if (!question.correct) {
       question.fails += 1
     }

@@ -2,8 +2,8 @@ package yy.rdpac.entity
 
 import io.github.yuemenglong.orm.Orm
 import io.github.yuemenglong.orm.lang.anno._
-import io.github.yuemenglong.orm.lang.types.Types
 import io.github.yuemenglong.orm.lang.types.Types._
+import yy.rdpac.kit.Shaffle
 
 /**
   * Created by <yuemenglong@126.com> on 2017/7/17.
@@ -34,6 +34,8 @@ class QuizQuestion {
   var id: Long = _
   @Pointer
   var info: Question = _
+  @Column(length = 16)
+  var seq: String = Shaffle.shaffle("abcd".split("")).mkString("")
   @Pointer
   var quiz: Quiz = _
 
@@ -44,6 +46,22 @@ class QuizQuestion {
 
   var quizId: Long = _
   var infoId: Long = _
+
+  def getCorrectAnswer: String = {
+    info.answer.split("").map(c => {
+      "abcd".charAt(seq.indexOf(c))
+    }).sorted.mkString("")
+  }
+
+  def getQuestion(no: String): String = {
+    val infoNo = "abcd".charAt(seq.indexOf(no))
+    infoNo match {
+      case 'a' => info.a
+      case 'b' => info.b
+      case 'c' => info.c
+      case 'd' => info.d
+    }
+  }
 }
 
 @Entity
