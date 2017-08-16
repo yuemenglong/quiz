@@ -54,7 +54,7 @@ class QuizQuestion {
   }
 
   def getQuestion(no: String): String = {
-    val infoNo = "abcd".charAt(seq.indexOf(no))
+    val infoNo = seq.charAt("abcd".indexOf(no))
     infoNo match {
       case 'a' => info.a
       case 'b' => info.b
