@@ -87,14 +87,14 @@ class App {
       val root = Orm.root(classOf[Mark]).asSelect()
       root.select("info")
       val query = Orm.select(root).from(root).where(root.get("userId").eql(quiz.userId))
-      val questions = Shaffle.shaffle(session.query(query))
-      quiz.questions = questions.zipWithIndex.map { case (q, idx) =>
+      val marks = Shaffle.shaffle(session.query(query))
+      quiz.questions = marks.zipWithIndex.map { case (q, idx) =>
         val qq = new QuizQuestion
-        qq.infoId = q.id
+        qq.infoId = q.infoId
         qq.idx = idx + 1
         qq
       }.toArray
-      quiz.count = questions.length
+      quiz.count = marks.length
       quiz = Orm.convert(quiz)
       val ex = Orm.insert(quiz)
       ex.insert("questions")
