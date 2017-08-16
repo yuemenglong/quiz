@@ -88,9 +88,9 @@ class App {
       root.select("info")
       val query = Orm.select(root).from(root).where(root.get("userId").eql(quiz.userId))
       val marks = Shaffle.shaffle(session.query(query))
-      quiz.questions = marks.zipWithIndex.map { case (q, idx) =>
+      quiz.questions = marks.zipWithIndex.map { case (mark, idx) =>
         val qq = new QuizQuestion
-        qq.infoId = q.infoId
+        qq.infoId = mark.infoId
         qq.idx = idx + 1
         qq
       }.toArray
