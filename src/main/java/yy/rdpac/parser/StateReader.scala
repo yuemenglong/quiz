@@ -1,7 +1,7 @@
 package yy.rdpac.parser
 
 import io.github.yuemenglong.orm.Orm
-import yy.json.JSON
+import io.github.yuemenglong.json.JSON
 import yy.rdpac.entity.User
 
 /**

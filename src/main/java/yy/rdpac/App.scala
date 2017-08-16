@@ -11,7 +11,7 @@ import yy.rdpac.entity._
 import java.lang.Long
 import javax.validation.constraints.NotNull
 
-import yy.json.JSON
+import io.github.yuemenglong.json.JSON
 import yy.rdpac.kit.Shaffle
 
 /**
@@ -75,17 +75,30 @@ class App {
               single: Integer, multi: Integer,
               start: Integer, end: Integer,
               chapter: Integer,
-              empty: Boolean
+              onlyMark: Boolean
              ): String = dao.beginTransaction(session => {
     val jo = JSON.parse(body).asObj()
     var quiz = new Quiz
     quiz.userId = jo.getLong("userId")
     quiz.mode = jo.getStr("mode")
     quiz.tag = jo.getStr("tag")
-    if (empty) {
-      quiz.count = 0
+    if (onlyMark) {
+      // 只获取收藏
+      val root = Orm.root(classOf[Mark]).asSelect()
+      root.select("info")
+      val query = Orm.select(root).from(root).where(root.get("userId").eql(quiz.userId))
+      val questions = Shaffle.shaffle(session.query(query))
+      quiz.questions = questions.zipWithIndex.map { case (q, idx) =>
+        val qq = new QuizQuestion
+        qq.infoId = q.id
+        qq.idx = idx
+        qq
+      }.toArray
+      quiz.count = questions.length
       quiz = Orm.convert(quiz)
-      session.execute(Orm.insert(quiz))
+      val ex = Orm.insert(quiz)
+      ex.insert("questions")
+      session.execute(ex)
       JSON.stringify(quiz)
     } else if (chapter != null) {
       val root = Orm.root(classOf[Question]).asSelect()

@@ -8,7 +8,7 @@ import org.springframework.beans.factory.config.BeanDefinition
 import org.springframework.context.annotation.ClassPathScanningCandidateComponentProvider
 import org.springframework.core.`type`.filter.RegexPatternTypeFilter
 import org.springframework.stereotype.Component
-import yy.json.JSON
+import io.github.yuemenglong.json.JSON
 import io.github.yuemenglong.orm.Orm
 import io.github.yuemenglong.orm.Session.Session
 import io.github.yuemenglong.orm.db.Db

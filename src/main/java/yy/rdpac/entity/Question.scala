@@ -89,6 +89,8 @@ class Mark {
   @Id(auto = true)
   var id: Long = _
   var infoId: Long = _
+  @Pointer
+  var info:Question = _
   var userId: Long = _
 }
 
