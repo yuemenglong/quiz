@@ -38,7 +38,6 @@ object Parser {
       try {
         val (name, value, next) = parse(lines, pos, state)
         if (name != null && value != null) {
-          //          println(name, value)
           map += (name -> value)
           if (map.size == 6) {
             ret += createQuestion(map)
@@ -65,7 +64,7 @@ object Parser {
       } else {
         throw new RuntimeException("Not Continued")
       }
-      q.chapter = chapter
+//      q.chapter = chapter
     })
     ret.toArray
   }

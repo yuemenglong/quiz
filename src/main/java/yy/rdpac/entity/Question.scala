@@ -9,10 +9,24 @@ import yy.rdpac.kit.Shaffle
   * Created by <yuemenglong@126.com> on 2017/7/17.
   */
 @Entity
+class Chapter {
+  @Id(auto = true)
+  var id: Long = _
+  var name: String = _
+  var ty: String = _
+
+  @OneToMany
+  var questions: Array[Question] = _
+}
+
+@Entity
 class Question {
   @Id(auto = true)
   var id: Long = _
-  var chapter: Integer = _
+  @Pointer
+  var chapter: Chapter = _
+  var chapterId: Long = _
+
   var idx: Integer = _
   @Column(length = 500)
   var title: String = _
@@ -133,30 +147,30 @@ class Study {
   var quizId: Long = _
 }
 
-object Main {
-  def main(args: Array[String]): Unit = {
-    Orm.init("yy.rdpac.entity")
-    val db = Orm.openDb("211.159.173.48", 3306, "work", "work", "rdpac")
-    db.beginTransaction(session => {
-      val r1 = Orm.root(classOf[Mark]).asSelect()
-      val q1 = Orm.select(r1).from(r1).where(r1.get("userId").eql(new Integer(2)))
-      val marks = session.query(q1)
-      val infoIds = marks.map(_.infoId.asInstanceOf[Object])
-      val r2 = Orm.root(classOf[QuizQuestion]).asSelect()
-      val q2 = Orm.select(r2).from(r2).where(r2.get("id").in(infoIds))
-      val qqs = session.query(q2)
-      val qqMap: Map[Long, QuizQuestion] = qqs.map(qq => (qq.id, qq))(collection.breakOut)
-      marks.foreach(mark => {
-        val infoId = mark.infoId
-        if (qqMap.contains(infoId)) {
-          val realId = qqMap(infoId).infoId
-          println(s"${infoId} => ${realId}")
-        } else {
-          println(s"Not Found: ${infoId}")
-        }
-      })
-      //      marks.foreach(println)
-      //      qqs.foreach(println)
-    })
-  }
-}
+//object Main {
+//  def main(args: Array[String]): Unit = {
+//    Orm.init("yy.rdpac.entity")
+//    val db = Orm.openDb("211.159.173.48", 3306, "work", "work", "rdpac")
+//    db.beginTransaction(session => {
+//      val r1 = Orm.root(classOf[Mark]).asSelect()
+//      val q1 = Orm.select(r1).from(r1).where(r1.get("userId").eql(new Integer(2)))
+//      val marks = session.query(q1)
+//      val infoIds = marks.map(_.infoId.asInstanceOf[Object])
+//      val r2 = Orm.root(classOf[QuizQuestion]).asSelect()
+//      val q2 = Orm.select(r2).from(r2).where(r2.get("id").in(infoIds))
+//      val qqs = session.query(q2)
+//      val qqMap: Map[Long, QuizQuestion] = qqs.map(qq => (qq.id, qq))(collection.breakOut)
+//      marks.foreach(mark => {
+//        val infoId = mark.infoId
+//        if (qqMap.contains(infoId)) {
+//          val realId = qqMap(infoId).infoId
+//          println(s"${infoId} => ${realId}")
+//        } else {
+//          println(s"Not Found: ${infoId}")
+//        }
+//      })
+//      //      marks.foreach(println)
+//      //      qqs.foreach(println)
+//    })
+//  }
+//}
