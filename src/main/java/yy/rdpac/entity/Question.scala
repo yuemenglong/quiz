@@ -70,15 +70,14 @@ class Quiz {
   var id: Long = _
   @DateTime
   var createTime: Date = new Date()
+  var timer: Integer = 0
   @OneToMany(right = "quizId")
   var questions: Array[QuizQuestion] = Array()
   var count: Integer = _
 
   var mode: String = "answer"
-  @Column(nullable = false)
+  @Column(nullable = false) // quiz study
   var tag: String = _
-
-  var finished: Boolean = false
 
   var answerIdx: Integer = 0
   var reviewIdx: Integer = 0
@@ -92,16 +91,31 @@ class Quiz {
 class User {
   @Id(auto = true)
   var id: Long = _
-  var wxId: String = _
+  @OneToOne
+  var wxUserInfo: WxUserInfo = _
 
   @OneToOne
   var study: Study = new Study
   @OneToMany
-  var quizs: Array[Quiz] = Array()
+  var quiz: Quiz = _
 
   @OneToMany(right = "userId")
   var marks: Array[Mark] = Array()
 }
+
+@Entity
+class WxUserInfo {
+  @Id(auto = true)
+  var id: Long = _
+  var userId: Long = _
+  var nickName: String = _
+  var avatarUrl: String = _
+  var gender: String = _
+  var province: String = _
+  var city: String = _
+  var country: String = _
+}
+
 
 @Entity
 class Mark {
@@ -132,6 +146,7 @@ class Study {
   var quiz: Quiz = _
   var quizId: Long = _
 }
+
 //
 //object Main {
 //  def main(args: Array[String]): Unit = {
