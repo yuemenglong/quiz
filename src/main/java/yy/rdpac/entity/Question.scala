@@ -84,15 +84,14 @@ class Quiz {
   var id: Long = _
   @DateTime
   var createTime: Date = new Date()
+  var timer: Integer = 0
   @OneToMany(right = "quizId")
   var questions: Array[QuizQuestion] = Array()
   var count: Integer = _
 
   var mode: String = "answer"
-  @Column(nullable = false)
+  @Column(nullable = false) // quiz study
   var tag: String = _
-
-  var finished: Boolean = false
 
   var answerIdx: Integer = 0
   var reviewIdx: Integer = 0
@@ -106,16 +105,31 @@ class Quiz {
 class User {
   @Id(auto = true)
   var id: Long = _
-  var wxId: String = _
+  @OneToOne
+  var wxUserInfo: WxUserInfo = _
 
   @OneToOne
   var study: Study = new Study
   @OneToMany
-  var quizs: Array[Quiz] = Array()
+  var quiz: Quiz = _
 
   @OneToMany(right = "userId")
   var marks: Array[Mark] = Array()
 }
+
+@Entity
+class WxUserInfo {
+  @Id(auto = true)
+  var id: Long = _
+  var userId: Long = _
+  var nickName: String = _
+  var avatarUrl: String = _
+  var gender: String = _
+  var province: String = _
+  var city: String = _
+  var country: String = _
+}
+
 
 @Entity
 class Mark {
@@ -150,7 +164,7 @@ class Study {
 //object Main {
 //  def main(args: Array[String]): Unit = {
 //    Orm.init("yy.rdpac.entity")
-//    val db = Orm.openDb("211.159.173.48", 3306, "work", "work", "rdpac")
+//    val db = Orm.openDb("211.159.173.48", 3306, "yml", "yml", "rdpac")
 //    db.beginTransaction(session => {
 //      val r1 = Orm.root(classOf[Mark]).asSelect()
 //      val q1 = Orm.select(r1).from(r1).where(r1.get("userId").eql(new Integer(2)))
@@ -165,8 +179,15 @@ class Study {
 //        if (qqMap.contains(infoId)) {
 //          val realId = qqMap(infoId).infoId
 //          println(s"${infoId} => ${realId}")
+//          val update = Orm.empty(classOf[Mark])
+//          update.id = mark.id
+//          update.infoId = realId
+//          session.execute(Orm.update(update))
 //        } else {
 //          println(s"Not Found: ${infoId}")
+//          val update = Orm.empty(classOf[Mark])
+//          update.id = mark.id
+//          session.execute(Orm.delete(update))
 //        }
 //      })
 //      //      marks.foreach(println)
