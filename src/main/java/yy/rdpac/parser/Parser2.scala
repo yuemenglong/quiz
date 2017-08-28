@@ -94,9 +94,13 @@ object Parser2 {
             }
           }
         } else if (answer != null) {
-          println(answer)
+          val re = "答案：(.+)".r
+          val answerNo = answer match {
+            case re(no) => no.trim
+          }
+          println(answerNo)
           require(currentQuestion.answer == null)
-          currentQuestion.answer = answer
+          currentQuestion.answer = answerNo
           require(currentQuestion.title != null)
           require(currentQuestion.a != null)
           require(currentQuestion.b != null)
@@ -140,7 +144,10 @@ object Parser2 {
     Orm.init("yy.rdpac.entity")
     val db = Orm.openDb("localhost", 3306, "root", "root", "rdpac")
     db.rebuild()
-    val res = Orm.converts(parse()).flatMap(_.questions)
+    val res = Orm.converts(parse()).flatMap(_.questions).zipWithIndex.map { case (q, idx) =>
+      q.chapterId = new java.lang.Long(idx + 1)
+      q
+    }
     println(res.length)
     val ex = Orm.insert(classOf[Question]).values(res)
     db.openSession().execute(ex)

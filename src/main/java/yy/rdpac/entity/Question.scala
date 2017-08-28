@@ -94,10 +94,6 @@ class Quiz {
   var tag: String = _
 
   var idx: Integer = 0
-
-  @Pointer
-  var user: User = _
-  var userId: Long = _
 }
 
 @Entity
@@ -108,11 +104,11 @@ class User {
   @OneToOne
   var wxUserInfo: WxUserInfo = _
 
-  @OneToOne
+  @Pointer
   var study: Quiz = _
-  @OneToOne
+  @Pointer
   var quiz: Quiz = _
-  @OneToOne
+  @Pointer
   var marked: Quiz = _
 
   @OneToMany(right = "userId")

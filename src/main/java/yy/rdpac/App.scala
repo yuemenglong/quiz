@@ -67,24 +67,20 @@ class App {
               single: Integer, multi: Integer,
               start: Integer, end: Integer,
               chapter: Integer,
-              marked: Boolean
+              marked: Long,
              ): String = dao.beginTransaction(session => {
-    val jo = JSON.parse(body).asObj()
+    //    val jo = JSON.parse(body).asObj()
     var quiz = new Quiz
-    quiz.userId = jo.getLong("userId")
-    quiz.mode = jo.getStr("mode")
-    quiz.tag = jo.getStr("tag")
+    //    quiz.mode = jo.getStr("mode")
+    //    quiz.tag = jo.getStr("tag")
 
-    //1 先删除该用户下其他quiz
-    {
-      val root = Orm.root(classOf[Quiz])
-      session.execute(Orm.delete(root).where(root.get("userId").eql(quiz.userId)))
-    }
-    if (marked) {
+    val ret = if (marked != null) {
+      quiz.mode = "study"
+      quiz.tag = "marked"
       // 收藏模式
       val root = Orm.root(classOf[Mark]).asSelect()
       root.select("info")
-      val query = Orm.select(root).from(root).where(root.get("userId").eql(quiz.userId))
+      val query = Orm.select(root).from(root).where(root.get("userId").eql(marked))
       val marks = Shaffle.shaffle(session.query(query))
       quiz.questions = marks.zipWithIndex.map { case (mark, idx) =>
         val qq = new QuizQuestion
@@ -100,8 +96,10 @@ class App {
       JSON.stringify(quiz)
     } else if (chapter != null) {
       // 学习模式
+      quiz.mode = "study"
+      quiz.tag = "study"
       val root = Orm.root(classOf[Question]).asSelect()
-      val query = Orm.select(root).from(root).where(root.get("chapter").eql(chapter))
+      val query = Orm.select(root).from(root).where(root.get("chapterId").eql(chapter))
       val questions = session.query(query)
       quiz.count = questions.length
       quiz.questions = questions.zipWithIndex.map(p => {
@@ -118,6 +116,8 @@ class App {
       JSON.stringify(quiz)
     } else {
       // 考试模式
+      quiz.mode = "answer"
+      quiz.tag = "quiz"
       val root = Orm.root(classOf[Question]).asSelect()
       val questions = session.query(Orm.select(root).from(root))
       val selected = (single, multi, start, end) match {
@@ -150,11 +150,28 @@ class App {
       session.execute(ex)
       JSON.stringify(quiz)
     }
+    // 只保留一个quiz
+    {
+      val root = Orm.root(classOf[User])
+      val ex = quiz.tag match {
+        case "study" => Orm.update(root).set(root.get("studyId").assign(quiz.id),
+          root.get("quizId").assignNull,
+          root.get("markedId").assignNull)
+        case "quiz" => Orm.update(root).set(root.get("studyId").assignNull,
+          root.get("quizId").assign(quiz.id),
+          root.get("markedId").assignNull)
+        case "marked" => Orm.update(root).set(root.get("studyId").assignNull,
+          root.get("quizId").assignNull,
+          root.get("markedId").assign(quiz.id))
+      }
+      session.execute(ex)
+    }
+    ret
   })
 
   @ResponseBody
   @RequestMapping(value = Array("/quiz/{id}"), method = Array(RequestMethod.DELETE), produces = Array("application/json"))
-  def deleteQuiz(@PathVariable id: Long): Unit = dao.beginTransaction(session => {
+  def deleteQuiz(@PathVariable id: Long, @NotNull tag: String): Unit = dao.beginTransaction(session => {
     {
       // 删除所有QuizQuestion
       val root = Orm.root(classOf[QuizQuestion])
@@ -164,6 +181,15 @@ class App {
       // 删除该Quiz
       val root = Orm.root(classOf[Quiz])
       session.execute(Orm.delete(root).where(root.get("id").eql(id)))
+    }
+    {
+      // 删除用户下的quiz信息
+      val root = Orm.root(classOf[User])
+      tag match {
+        case "study" => session.execute(Orm.update(root).set(root.get("studyId").assignNull()).where(root.get("studyId").eql(id)))
+        case "quiz" => session.execute(Orm.update(root).set(root.get("quizId").assignNull()).where(root.get("quizId").eql(id)))
+        case "marked" => session.execute(Orm.update(root).set(root.get("markedId").assignNull()).where(root.get("markedId").eql(id)))
+      }
     }
   })
 
