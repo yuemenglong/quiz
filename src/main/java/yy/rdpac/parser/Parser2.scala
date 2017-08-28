@@ -101,6 +101,7 @@ object Parser2 {
           println(answerNo)
           require(currentQuestion.answer == null)
           currentQuestion.answer = answerNo
+          currentQuestion.multi = answerNo.length > 1
           require(currentQuestion.title != null)
           require(currentQuestion.a != null)
           require(currentQuestion.b != null)
@@ -144,9 +145,11 @@ object Parser2 {
     Orm.init("yy.rdpac.entity")
     val db = Orm.openDb("localhost", 3306, "root", "root", "rdpac")
     db.rebuild()
-    val res = Orm.converts(parse()).flatMap(_.questions).zipWithIndex.map { case (q, idx) =>
-      q.chapterId = new java.lang.Long(idx + 1)
-      q
+    val res = Orm.converts(parse()).zipWithIndex.flatMap { case (chapter, idx) =>
+      chapter.questions.map(q => {
+        q.chapterId = new java.lang.Long(idx + 1)
+        q
+      })
     }
     println(res.length)
     val ex = Orm.insert(classOf[Question]).values(res)
