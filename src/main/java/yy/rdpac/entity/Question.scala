@@ -1,6 +1,5 @@
 package yy.rdpac.entity
 
-import io.github.yuemenglong.orm.Orm
 import io.github.yuemenglong.orm.lang.anno._
 import io.github.yuemenglong.orm.lang.types.Types._
 import yy.rdpac.kit.Shaffle
@@ -67,7 +66,7 @@ class QuizQuestion {
     }).sorted.mkString("")
   }
 
-  def getQuestion(no: String): String = {
+  def getAnswerInfo(no: String): String = {
     val infoNo = seq.charAt("abcd".indexOf(no))
     infoNo match {
       case 'a' => info.a
@@ -93,8 +92,7 @@ class Quiz {
   @Column(nullable = false) // quiz study
   var tag: String = _
 
-  var answerIdx: Integer = 0
-  var reviewIdx: Integer = 0
+  var idx: Integer = 0
 
   @Pointer
   var user: User = _
@@ -105,13 +103,16 @@ class Quiz {
 class User {
   @Id(auto = true)
   var id: Long = _
+  var code: String = _
   @OneToOne
   var wxUserInfo: WxUserInfo = _
 
   @OneToOne
-  var study: Study = new Study
-  @OneToMany
+  var study: Quiz = _
+  @OneToOne
   var quiz: Quiz = _
+  @OneToOne
+  var marked: Quiz = _
 
   @OneToMany(right = "userId")
   var marks: Array[Mark] = Array()
@@ -149,16 +150,6 @@ class DebugInfo {
   var info: String = _
   @DateTime
   var createTime: Date = new Date
-}
-
-@Entity
-class Study {
-  @Id(auto = true)
-  var id: Long = _
-  // 与学习相关的quiz
-  @Pointer
-  var quiz: Quiz = _
-  var quizId: Long = _
 }
 
 //object Main {

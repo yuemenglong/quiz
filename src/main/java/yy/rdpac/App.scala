@@ -9,6 +9,7 @@ import io.github.yuemenglong.orm.Orm
 import yy.rdpac.bean.Dao
 import yy.rdpac.entity._
 import java.lang.Long
+import java.util.Date
 import javax.validation.constraints.NotNull
 
 import io.github.yuemenglong.json.JSON
@@ -37,47 +38,26 @@ class App {
 
   @ResponseBody
   @RequestMapping(value = Array("/user"), method = Array(RequestMethod.POST), produces = Array("application/json"))
-  def registUser(@RequestBody body: String): String = dao.beginTransaction(session => {
+  def regist(@RequestBody body: String): String = dao.beginTransaction(session => {
     val user = JSON.parse(body, classOf[User])
-    user.study = Orm.convert(new Study)
+    user.code = new Date().toString
     val ex = Orm.insert(user)
-    ex.insert("study")
     session.execute(ex)
     JSON.stringify(user)
   })
 
   @ResponseBody
   @RequestMapping(value = Array("/user"), method = Array(RequestMethod.GET), produces = Array("application/json"))
-  def getUserInfo(@NotNull nickName: String): String = dao.beginTransaction(session => {
+  def getUser(@NotNull code: String): String = dao.beginTransaction(session => {
     val root = Orm.root(classOf[User]).asSelect()
     root.select("quiz").select("questions")
+    root.select("study").select("questions")
+    root.select("marked").select("questions")
     root.select("marks")
-    root.select("study").select("quiz")
-    val query = Orm.select(root).from(root).where(root.get("wxId").eql(nickName))
+    val query = Orm.select(root).from(root).where(root.get("code").eql(code))
     val user = session.first(query)
     JSON.stringify(user)
   })
-
-  @ResponseBody
-  @RequestMapping(value = Array("/user/{id}"), method = Array(RequestMethod.GET), produces = Array("application/json"))
-  def getUserInfo(@PathVariable id: Long): String = dao.beginTransaction(session => {
-    val root = Orm.root(classOf[User]).asSelect()
-    root.select("quiz").select("questions")
-    root.select("marks")
-    root.select("study").select("quiz")
-    val query = Orm.select(root).from(root).where(root.get("id").eql(id))
-    val user = session.first(query)
-    JSON.stringify(user)
-  })
-
-  //  @ResponseBody
-  //  @RequestMapping(value = Array("/quizs"), method = Array(RequestMethod.GET), produces = Array("application/json"))
-  //  def getQuizs(@NotNull wxId: String): String = dao.beginTransaction(session => {
-  //    val root = Orm.root(classOf[Quiz]).asSelect()
-  //    val query = Orm.select(root).from(root).where(root.join("user").get("wxId").eql(wxId))
-  //    val res = session.query(query)
-  //    JSON.stringify(res)
-  //  })
 
   @ResponseBody
   @RequestMapping(value = Array("/quiz"), method = Array(RequestMethod.POST), produces = Array("application/json"))
@@ -99,7 +79,7 @@ class App {
       session.execute(Orm.delete(root).where(root.get("userId").eql(quiz.userId)))
     }
     if (marked) {
-      // 只获取收藏
+      // 收藏模式
       val root = Orm.root(classOf[Mark]).asSelect()
       root.select("info")
       val query = Orm.select(root).from(root).where(root.get("userId").eql(quiz.userId))
@@ -117,6 +97,7 @@ class App {
       session.execute(ex)
       JSON.stringify(quiz)
     } else if (chapter != null) {
+      // 学习模式
       val root = Orm.root(classOf[Question]).asSelect()
       val query = Orm.select(root).from(root).where(root.get("chapter").eql(chapter))
       val questions = session.query(query)
@@ -134,6 +115,7 @@ class App {
       session.execute(ex)
       JSON.stringify(quiz)
     } else {
+      // 考试模式
       val root = Orm.root(classOf[Question]).asSelect()
       val questions = session.query(Orm.select(root).from(root))
       val selected = (single, multi, start, end) match {
@@ -169,55 +151,19 @@ class App {
   })
 
   @ResponseBody
-  @RequestMapping(value = Array("/quiz/{quizId}/question"), method = Array(RequestMethod.POST), produces = Array("application/json"))
-  def postQuizQuestion(@PathVariable quizId: Long, @RequestBody body: String): String = dao.beginTransaction(session => {
-    val root = Orm.root(classOf[QuizQuestion]).asSelect()
-    val query = Orm.select(root.count()).from(root).where(root.get("quizId").eql(quizId))
-    val count = session.first(query)
-    val question = JSON.parse(body, classOf[QuizQuestion])
-    question.idx = (count + 1).toInt
-    question.quizId = quizId
-    session.execute(Orm.insert(question))
-    // 更新count
-    val quiz = new Quiz
-    quiz.id = quizId
-    quiz.count = (count + 1).toInt
-    session.execute(Orm.update(Orm.convert(quiz)))
-
-    JSON.stringify(question)
-  })
-
-//  @ResponseBody
-//  @RequestMapping(value = Array("/quiz-question/{id}"), method = Array(RequestMethod.DELETE), produces = Array("application/json"))
-//  def deleteQuizQuestion(@PathVariable id: Long): Unit = dao.beginTransaction(session => {
-//    val quizQuestion = new QuizQuestion
-//    quizQuestion.id = id
-//    session.execute(Orm.delete(Orm.convert(quizQuestion)))
-//  })
-
-  @ResponseBody
   @RequestMapping(value = Array("/quiz/{id}"), method = Array(RequestMethod.DELETE), produces = Array("application/json"))
   def deleteQuiz(@PathVariable id: Long): Unit = dao.beginTransaction(session => {
     {
+      // 删除所有QuizQuestion
       val root = Orm.root(classOf[QuizQuestion])
       session.execute(Orm.delete(root).where(root.get("quizId").eql(id)))
     }
     {
+      // 删除该Quiz
       val root = Orm.root(classOf[Quiz])
       session.execute(Orm.delete(root).where(root.get("id").eql(id)))
     }
   })
-
-//  @ResponseBody
-//  @RequestMapping(value = Array("/quiz/{id}"), method = Array(RequestMethod.GET), produces = Array("application/json"))
-//  def getQuiz(@PathVariable id: Long): String = dao.beginTransaction(session => {
-//    val root = Orm.root(classOf[Quiz]).asSelect()
-//    root.select("questions")
-//    val query = Orm.select(root).from(root)
-//      .where(root.get("id").eql(id))
-//    val quiz = session.first(query)
-//    JSON.stringify(quiz)
-//  })
 
   @ResponseBody
   @RequestMapping(value = Array("/question/{id}"), method = Array(RequestMethod.GET), produces = Array("application/json"))
@@ -245,9 +191,9 @@ class App {
     }
     // 2. 更新question
     session.execute(Orm.update(question))
-    // 3. 更新quiz上的answerIdx
+    // 3. 更新quiz上的idx
     val quiz = Orm.empty(classOf[Quiz])
-    quiz.answerIdx = question.idx
+    quiz.idx = question.idx
     quiz.id = question.quizId
     session.execute(Orm.update(Orm.convert(quiz)))
     // 4. 返回计算后的question
@@ -274,16 +220,6 @@ class App {
     val ex = Orm.insert(Orm.convert(info))
     session.execute(ex)
     ""
-  })
-
-  @ResponseBody
-  @RequestMapping(value = Array("/study/{id}"), method = Array(RequestMethod.PUT), produces = Array("application/json"))
-  def putStudy(@PathVariable id: Long, @RequestBody body: String): String = dao.beginTransaction(session => {
-    val study = JSON.parse(body, classOf[Study])
-    study.id = id
-    val ex = Orm.update(study)
-    session.execute(ex)
-    body
   })
 
   @ResponseBody

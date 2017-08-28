@@ -3,6 +3,7 @@ package yy.rdpac.parser
 import io.github.yuemenglong.json.JSON
 import io.github.yuemenglong.orm.Orm
 import yy.rdpac.entity.{Chapter, Question}
+import yy.rdpac.parser.Parser.parse
 
 import scala.collection.mutable.ArrayBuffer
 import scala.io.Source
@@ -110,7 +111,7 @@ object Parser2 {
     chapters.toArray
   }
 
-  def main(args: Array[String]): Unit = {
+  def findDiff(): Unit = {
     val newQs = parse().flatMap(_.questions)
     val oldQs = {
       Orm.init("yy.rdpac.entity")
@@ -133,5 +134,15 @@ object Parser2 {
           println(oldQs(idx))
       }
     }
+  }
+
+  def main(args: Array[String]): Unit = {
+    Orm.init("yy.rdpac.entity")
+    val db = Orm.openDb("localhost", 3306, "root", "root", "rdpac")
+    db.rebuild()
+    val res = Orm.converts(parse()).flatMap(_.questions)
+    println(res.length)
+    val ex = Orm.insert(classOf[Question]).values(res)
+    db.openSession().execute(ex)
   }
 }
