@@ -42,14 +42,16 @@ class App {
     val user = JSON.parse(body, classOf[User])
     user.code = new Date().toString
     val ex = Orm.insert(user)
+    ex.insert("wxUserInfo")
     session.execute(ex)
     JSON.stringify(user)
   })
 
   @ResponseBody
   @RequestMapping(value = Array("/user"), method = Array(RequestMethod.GET), produces = Array("application/json"))
-  def getUser(@NotNull code: String): String = dao.beginTransaction(session => {
+  def fetchUser(@NotNull code: String): String = dao.beginTransaction(session => {
     val root = Orm.root(classOf[User]).asSelect()
+    root.select("wxUserInfo")
     root.select("quiz").select("questions")
     root.select("study").select("questions")
     root.select("marked").select("questions")

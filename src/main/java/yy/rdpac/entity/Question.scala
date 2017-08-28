@@ -84,6 +84,7 @@ class Quiz {
   @DateTime
   var createTime: Date = new Date()
   var timer: Integer = 0
+
   @OneToMany(right = "quizId")
   var questions: Array[QuizQuestion] = Array()
   var count: Integer = _
