@@ -13,6 +13,8 @@ import java.util.Date
 import javax.validation.constraints.NotNull
 
 import io.github.yuemenglong.json.JSON
+import io.github.yuemenglong.orm.lang.types.Types._
+import io.github.yuemenglong.orm.operate.traits.core.JoinType
 import yy.rdpac.kit.Shaffle
 
 /**
@@ -64,23 +66,46 @@ class App {
   @ResponseBody
   @RequestMapping(value = Array("/quiz"), method = Array(RequestMethod.POST), produces = Array("application/json"))
   def newQuiz(@RequestBody body: String,
+              @NotNull userId: Long,
               single: Integer, multi: Integer,
               start: Integer, end: Integer,
               chapter: Integer,
-              marked: Long,
+              marked: Boolean,
              ): String = dao.beginTransaction(session => {
+    {
+      //删除所有现有的quiz
+      val root = Orm.root(classOf[User]).asSelect()
+      val user = session.first(Orm.select(root).from(root).where(root.get("id").eql(userId)))
+      if (user.studyId != null) {
+        val root = Orm.root(classOf[Quiz])
+        session.execute(Orm.delete(root).where(root.get("id").eql(user.studyId)))
+      }
+      if (user.quizId != null) {
+        val root = Orm.root(classOf[Quiz])
+        session.execute(Orm.delete(root).where(root.get("id").eql(user.quizId)))
+      }
+      if (user.markedId != null) {
+        val root = Orm.root(classOf[Quiz])
+        session.execute(Orm.delete(root).where(root.get("id").eql(user.markedId)))
+      }
+      {
+        val root = Orm.root(classOf[QuizQuestion])
+        val quiz = root.join("quiz", JoinType.LEFT)
+        session.execute(Orm.delete(root).where(quiz.get("id").isNull))
+      }
+    }
     //    val jo = JSON.parse(body).asObj()
     var quiz = new Quiz
     //    quiz.mode = jo.getStr("mode")
     //    quiz.tag = jo.getStr("tag")
 
-    val ret = if (marked != null) {
+    val ret = if (marked) {
       quiz.mode = "study"
       quiz.tag = "marked"
       // 收藏模式
       val root = Orm.root(classOf[Mark]).asSelect()
       root.select("info")
-      val query = Orm.select(root).from(root).where(root.get("userId").eql(marked))
+      val query = Orm.select(root).from(root).where(root.get("userId").eql(userId))
       val marks = Shaffle.shaffle(session.query(query))
       quiz.questions = marks.zipWithIndex.map { case (mark, idx) =>
         val qq = new QuizQuestion
@@ -151,6 +176,7 @@ class App {
       JSON.stringify(quiz)
     }
     // 只保留一个quiz
+
     {
       val root = Orm.root(classOf[User])
       val ex = quiz.tag match {
@@ -229,6 +255,18 @@ class App {
     jo.remove("info")
     jo.toString()
   })
+
+  @ResponseBody
+  @RequestMapping(value = Array("/quiz-question"), method = Array(RequestMethod.PUT), produces = Array("application/json"))
+  def updateQuizQuestion(@NotNull quizId: Long, @NotNull correct: Boolean, @RequestBody body: String): String = dao.beginTransaction(session => {
+    val jo = JSON.parse(body).asObj()
+    val answer = jo.getStr("answer")
+    val root = Orm.root(classOf[QuizQuestion])
+    val ex = Orm.update(root).set(root.get("answer").assign(answer)).where(root.get("quizId").eql(quizId).and(root.get("correct").eql(correct)))
+    session.execute(ex)
+    body
+  })
+
 
   @ResponseBody
   @RequestMapping(value = Array("/quiz/{id}"), method = Array(RequestMethod.PUT), produces = Array("application/json"))

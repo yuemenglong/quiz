@@ -45,10 +45,10 @@ class Question {
 class QuizQuestion {
   @Id(auto = true)
   var id: Long = _
-  @Pointer
-  var info: Question = _
   @Column(length = 16)
   var seq: String = Shaffle.shaffle("abcd".split("")).mkString("")
+  @Pointer
+  var info: Question = _
   @Pointer
   var quiz: Quiz = _
 
@@ -106,10 +106,13 @@ class User {
 
   @Pointer
   var study: Quiz = _
+  var studyId: Long = _
   @Pointer
   var quiz: Quiz = _
+  var quizId: Long = _
   @Pointer
   var marked: Quiz = _
+  var markedId: Long = _
 
   @OneToMany(right = "userId")
   var marks: Array[Mark] = Array()
