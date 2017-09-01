@@ -8,7 +8,6 @@ import org.springframework.web.bind.annotation._
 import io.github.yuemenglong.orm.Orm
 import yy.rdpac.bean.Dao
 import yy.rdpac.entity._
-import java.lang.Long
 import java.util.Date
 import javax.validation.constraints.NotNull
 
@@ -16,13 +15,18 @@ import io.github.yuemenglong.json.JSON
 import io.github.yuemenglong.orm.lang.types.Types._
 import io.github.yuemenglong.orm.operate.traits.core.JoinType
 import yy.rdpac.kit.Shaffle
+import yy.rdpac.parser.Parser2
 
 /**
   * Created by <yuemenglong@126.com> on 2017/7/19.
   */
 object App {
   def main(args: Array[String]): Unit = {
-    SpringApplication.run(classOf[App])
+    if (args sameElements Array("rebuild")) {
+      Parser2.main(args)
+    } else {
+      SpringApplication.run(classOf[App])
+    }
   }
 }
 
@@ -275,17 +279,6 @@ class App {
     quiz.id = id
     session.execute(Orm.update(quiz))
     JSON.stringify(quiz)
-  })
-
-  @ResponseBody
-  @RequestMapping(value = Array("/debug"), method = Array(RequestMethod.POST), produces = Array("application/json"))
-  def postDebugInfo(@NotNull userId: Long, @RequestBody body: String): String = dao.beginTransaction(session => {
-    val info = new DebugInfo
-    info.info = body
-    info.userId = userId
-    val ex = Orm.insert(Orm.convert(info))
-    session.execute(ex)
-    ""
   })
 
   @ResponseBody

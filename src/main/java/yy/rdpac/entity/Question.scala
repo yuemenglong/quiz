@@ -142,16 +142,6 @@ class Mark {
   var userId: Long = _
 }
 
-@Entity
-class DebugInfo {
-  @Id(auto = true)
-  var id: Long = _
-  var userId: Long = _
-  var info: String = _
-  @DateTime
-  var createTime: Date = new Date
-}
-
 //object Main {
 //  def main(args: Array[String]): Unit = {
 //    Orm.init("yy.rdpac.entity")
