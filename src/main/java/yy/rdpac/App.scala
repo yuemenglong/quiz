@@ -15,18 +15,13 @@ import io.github.yuemenglong.json.JSON
 import io.github.yuemenglong.orm.lang.types.Types._
 import io.github.yuemenglong.orm.operate.traits.core.JoinType
 import yy.rdpac.kit.Shaffle
-import yy.rdpac.parser.Parser2
 
 /**
   * Created by <yuemenglong@126.com> on 2017/7/19.
   */
 object App {
   def main(args: Array[String]): Unit = {
-    if (args sameElements Array("rebuild")) {
-      Parser2.main(args)
-    } else {
-      SpringApplication.run(classOf[App])
-    }
+    SpringApplication.run(classOf[App])
   }
 }
 
