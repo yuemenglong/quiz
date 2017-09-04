@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation._
 import io.github.yuemenglong.orm.Orm
 import yy.rdpac.bean.Dao
 import yy.rdpac.entity._
-import java.util.Date
+import java.util.{Date, UUID}
 import javax.validation.constraints.NotNull
 
 import io.github.yuemenglong.json.JSON
@@ -93,11 +93,7 @@ class App {
         session.execute(Orm.delete(root).where(quiz.get("id").isNull))
       }
     }
-    //    val jo = JSON.parse(body).asObj()
     var quiz = new Quiz
-    //    quiz.mode = jo.getStr("mode")
-    //    quiz.tag = jo.getStr("tag")
-
     val ret = if (marked) {
       quiz.mode = "study"
       quiz.tag = "marked"
@@ -175,7 +171,6 @@ class App {
       JSON.stringify(quiz)
     }
     // 只保留一个quiz
-
     {
       val root = Orm.root(classOf[User])
       val ex = quiz.tag match {
@@ -295,6 +290,33 @@ class App {
     mark.id = id
     val e = Orm.convert(mark)
     session.execute(Orm.delete(e))
+  })
+
+  @ResponseBody
+  @RequestMapping(value = Array("/admin-gen-code/{count}"), method = Array(RequestMethod.GET), produces = Array("application/json"))
+  def generateCode(@PathVariable count: Integer): Unit = dao.beginTransaction(session => {
+    val codes = Stream.from(0).takeWhile(_ < count).map(_ => {
+      val code = UUID.randomUUID().toString.split("-")(0)
+      val c = new RegistCode
+      c.code = code
+      c
+    }).toArray
+    val ex = Orm.insert(classOf[RegistCode]).values(Orm.converts(codes))
+    session.execute(ex)
+  })
+
+  @ResponseBody
+  @RequestMapping(value = Array("/admin-fetch-code"), method = Array(RequestMethod.GET), produces = Array("application/json"))
+  def fetchCode(): String = dao.beginTransaction(session => {
+    val root = Orm.root(classOf[RegistCode]).asSelect()
+    val code = session.first(Orm.select(root).from(root).where(root.get("usable").eql(new Boolean(true))).limit(1))
+    if (code != null) {
+      code.usable = false
+      session.execute(Orm.update(code))
+      code.code
+    } else {
+      ""
+    }
   })
 
 }

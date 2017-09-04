@@ -101,6 +101,7 @@ class User {
   @Id(auto = true)
   var id: Long = _
   var code: String = _
+  var registTime: Date = _
   @OneToOne
   var wxUserInfo: WxUserInfo = _
 
@@ -131,7 +132,6 @@ class WxUserInfo {
   var country: String = _
 }
 
-
 @Entity
 class Mark {
   @Id(auto = true)
@@ -140,6 +140,15 @@ class Mark {
   @Pointer
   var info: Question = _
   var userId: Long = _
+}
+
+@Entity
+class RegistCode {
+  @Id(auto = true)
+  var id: Long = _
+  var userId: Long = _
+  var code: String = _
+  var usable: Boolean = true
 }
 
 //object Main {
