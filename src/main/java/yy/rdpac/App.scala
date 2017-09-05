@@ -41,7 +41,28 @@ class App {
   @RequestMapping(value = Array("/user"), method = Array(RequestMethod.POST), produces = Array("application/json"))
   def regist(@RequestBody body: String): String = dao.beginTransaction(session => {
     val user = JSON.parse(body, classOf[User])
-    user.code = new Date().toString
+    // 验证注册码
+    if (user.code == null) {
+      throw new RuntimeException("No Regist Code")
+    }
+    {
+      val root = Orm.root(classOf[RegistCode]).asSelect()
+      val query = Orm.select(root.count()).from(root).where(root.get("code").eql(user.code))
+      val count = session.first(query)
+      if (count == 0) {
+        throw new RuntimeException("No Such Code")
+      }
+    }
+    // 是否被使用
+    {
+      val root = Orm.root(classOf[User]).asSelect()
+      val query = Orm.select(root.count()).from(root).where(root.get("code").eql(user.code))
+      val count = session.first(query)
+      if (count > 0) {
+        throw new RuntimeException("Code Has Bean Registed")
+      }
+    }
+    user.registTime = new Date()
     val ex = Orm.insert(user)
     ex.insert("wxUserInfo")
     session.execute(ex)
