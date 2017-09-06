@@ -14,6 +14,7 @@ import javax.validation.constraints.NotNull
 import io.github.yuemenglong.json.JSON
 import io.github.yuemenglong.orm.lang.types.Types._
 import io.github.yuemenglong.orm.operate.traits.core.JoinType
+import yy.rdpac.exception.{CodeAlreadyUsedException, CodeNotExistsException}
 import yy.rdpac.kit.Shaffle
 
 /**
@@ -43,14 +44,14 @@ class App {
     val user = JSON.parse(body, classOf[User])
     // 验证注册码
     if (user.code == null) {
-      throw new RuntimeException("No Regist Code")
+      throw new CodeNotExistsException()
     }
     {
       val root = Orm.root(classOf[RegistCode]).asSelect()
       val query = Orm.select(root.count()).from(root).where(root.get("code").eql(user.code))
       val count = session.first(query)
       if (count == 0) {
-        throw new RuntimeException("No Such Code")
+        throw new CodeNotExistsException()
       }
     }
     // 是否被使用
@@ -59,7 +60,7 @@ class App {
       val query = Orm.select(root.count()).from(root).where(root.get("code").eql(user.code))
       val count = session.first(query)
       if (count > 0) {
-        throw new RuntimeException("Code Has Bean Registed")
+        throw new CodeAlreadyUsedException()
       }
     }
     user.registTime = new Date()
