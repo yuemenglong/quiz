@@ -73,7 +73,7 @@ class App {
   @RequestMapping(value = Array("/user"), method = Array(RequestMethod.GET), produces = Array("application/json"))
   def fetchUser(@NotNull code: String): String = dao.beginTransaction(session => {
     val root = Orm.root(classOf[User]).asSelect()
-    root.select("wxUserInfo")
+    //    root.select("wxUserInfo")
     root.select("quiz").select("questions")
     root.select("study").select("questions")
     root.select("marked").select("questions")
