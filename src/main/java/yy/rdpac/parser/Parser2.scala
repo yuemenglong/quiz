@@ -197,9 +197,5 @@ object Parser2 {
         session.execute(ex)
       }
     })
-
-    //    println(res.length)
-    //
-    //    db.openSession().execute(ex)
   }
 }

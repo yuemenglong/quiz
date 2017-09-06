@@ -85,6 +85,15 @@ class App {
   })
 
   @ResponseBody
+  @RequestMapping(value = Array("/chapters"), method = Array(RequestMethod.GET), produces = Array("application/json"))
+  def fetchChapters(): String = dao.beginTransaction(session => {
+    val root = Orm.root(classOf[Chapter]).asSelect()
+    val query = Orm.select(root).from(root).asc(root.get("idx"))
+    val chapters = session.query(query)
+    JSON.stringify(chapters)
+  })
+
+  @ResponseBody
   @RequestMapping(value = Array("/quiz"), method = Array(RequestMethod.POST), produces = Array("application/json"))
   def newQuiz(@RequestBody body: String,
               @NotNull userId: Long,
@@ -282,7 +291,6 @@ class App {
     session.execute(ex)
     body
   })
-
 
   @ResponseBody
   @RequestMapping(value = Array("/quiz/{id}"), method = Array(RequestMethod.PUT), produces = Array("application/json"))
