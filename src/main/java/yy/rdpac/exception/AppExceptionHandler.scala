@@ -14,7 +14,7 @@ class AppExceptionHandler extends HandlerExceptionResolver {
                                 o: scala.Any, e: Exception): ModelAndView = {
     val message = e match {
       case _: CodeNotExistsException => "注册码不存在"
-      case _: CodeAlreadyUsedException => "注册码已使用"
+      case _: CodeAlreadyUsedException => "注册码已失效"
       case _ =>
         e.printStackTrace()
         "请求出错"
