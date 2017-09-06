@@ -47,9 +47,9 @@ object Parser2 {
     var currentChapter: Chapter = null
     var currentQuestion: Question = null
     readAndNormalizeContent().foreach {
-      case re(_, single, multi, title, abcd, answer, analyze) =>
+      case re(line, single, multi, title, abcd, answer, analyze) =>
         if (single != null || multi != null) {
-          println(single, multi)
+          //          println(single, multi)
           val ty = (single, multi) match {
             case (s, null) if s != null => "单选题"
             case (null, m) if m != null => "多选题"
@@ -62,8 +62,9 @@ object Parser2 {
           currentChapter = new Chapter
           currentChapter.ty = ty
         } else if (title != null) {
-          println(title)
-          val re = """(\d+)．(.+)""".r
+          //          println(title)
+          val re =
+            """(\d+)．(.+)""".r
           require(currentChapter.ty != null)
           currentQuestion = new Question
           title match {
@@ -73,7 +74,7 @@ object Parser2 {
               currentQuestion.idx = idx.toInt
           }
         } else if (abcd != null) {
-          println(abcd)
+          //          println(abcd)
           require(currentChapter.ty != null)
           require(currentQuestion.title != null)
           val re = """([A-D])．(.+)""".r
@@ -98,7 +99,7 @@ object Parser2 {
           val answerNo = answer match {
             case re(no) => no.trim
           }
-          println(answerNo)
+          //          println(answerNo)
           require(currentQuestion.answer == null)
           currentQuestion.answer = answerNo
           currentQuestion.multi = answerNo.length > 1
@@ -141,18 +142,64 @@ object Parser2 {
     }
   }
 
+  val names: String =
+    """
+      |1-1 人体简介
+      |1-2 病因和防御机制
+      |1-3 神经系统
+      |1-4 循环系统
+      |1-5 呼吸系统
+      |1-6 骨骼肌肉系统
+      |1-7 消化系统
+      |1-8 泌尿系统
+      |1-9 内分泌代谢系统
+      |1-10 生殖系统
+      |1-11 皮肤
+      |1-12 特殊感觉器官
+      |2-1 药理学
+      |2-2 临床药理学
+      |2-3 药剂学
+      |2-4 药品不良反应监测
+      |3 行为准则
+      |4-3 中国制药工业概述
+      |4-4 世界药品市场
+    """.stripMargin
+
   def main(args: Array[String]): Unit = {
+    val chapterNames = names.trim.split("\n").map(_.trim)
     Orm.init("yy.rdpac.entity")
     val db = Orm.openDb("localhost", 3306, "root", "root", "rdpac")
     db.rebuild()
-    val res = Orm.converts(parse()).zipWithIndex.flatMap { case (chapter, idx) =>
-      chapter.questions.map(q => {
-        q.chapterId = new java.lang.Long(idx + 1)
-        q
-      })
+    val chapters = Orm.converts(parse()).zipWithIndex.map { case (chapter, idx) =>
+      chapter.idx = idx + 1
+      val postfix = idx % 2 match {
+        case 0 => "单选题"
+        case 1 => "多选题"
+      }
+      val nameIdx = idx / 2
+      chapter.name = chapterNames(nameIdx) + s" $postfix"
+      println(chapter.name, chapter.questions.length)
+      chapter
     }
-    println(res.length)
-    val ex = Orm.insert(classOf[Question]).values(res)
-    db.openSession().execute(ex)
+    db.beginTransaction(session => {
+      {
+        val ex = Orm.insert(classOf[Chapter]).values(chapters)
+        session.execute(ex)
+      }
+      {
+        val questions = chapters.zipWithIndex.flatMap { case (chapter, idx) =>
+          chapter.questions.map(q => {
+            q.chapterId = Predef.long2Long(idx + 1)
+            q
+          })
+        }
+        val ex = Orm.insert(classOf[Question]).values(questions)
+        session.execute(ex)
+      }
+    })
+
+    //    println(res.length)
+    //
+    //    db.openSession().execute(ex)
   }
 }

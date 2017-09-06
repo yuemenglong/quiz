@@ -11,6 +11,7 @@ import yy.rdpac.kit.Shaffle
 class Chapter {
   @Id(auto = true)
   var id: Long = _
+  var idx: Integer = _
   var name: String = _
   var ty: String = _
 
